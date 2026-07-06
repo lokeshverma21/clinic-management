@@ -1,50 +1,167 @@
-// Create new appointments
-// Read/fetch appointments (by ID, date, doctor, patient, etc.)
-// Update existing appointments
-// Delete/cancel appointments
+// src/modules/appointments/appointment.repository.ts
+import { and, eq, gt, lt, ne, isNull } from 'drizzle-orm';
+import { db } from '@/db/client';
+import { appointments, memberships } from '@/db/schema';
+import type { NewAppointment, Appointment } from '@/db/schema';
 
-// appointment.repository.ts
+/**
+ * Thrown when the database's EXCLUDE constraint (Part 6) rejects an
+ * insert/update — meaning the application-level overlap check below lost
+ * a race to a concurrent request. This is the backstop working as
+ * designed (Part 8's defense-in-depth), not an unexpected failure.
+ */
+export class SlotConflictDbError extends Error {}
 
-// import { db } from '../db'; // your Drizzle database connection
-// import { appointments } from '../schema/appointments'; // your table schema
-// import { eq } from 'drizzle-orm';
+function isExclusionViolation(error: unknown): boolean {
+  // Postgres error code 23P01 = exclusion_violation
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === '23P01';
+}
 
-// export class AppointmentRepository {
-//   // Create a new appointment
-//   async createAppointment(data: {
-//     doctorId: number;
-//     patientId: number;
-//     date: Date;
-//     status: string;
-//   }) {
-//     const result = await db.insert(appointments).values(data).returning();
-//     return result[0];
-//   }
+export async function listAppointments(
+  clinicId: string,
+  filters: { from: Date; to: Date; doctorMembershipId?: string; status?: Appointment['status'] },
+): Promise<Appointment[]> {
+  const conditions = [
+    eq(appointments.clinicId, clinicId),
+    isNull(appointments.deletedAt),
+    // Overlap semantics, not a naive "startTime between" — catches
+    // appointments that span into or out of the requested range.
+    lt(appointments.startTime, filters.to),
+    gt(appointments.endTime, filters.from),
+  ];
 
-//   // Find appointment by ID
-//   async findById(id: number) {
-//     const result = await db
-//       .select()
-//       .from(appointments)
-//       .where(eq(appointments.id, id));
-//     return result[0] || null;
-//   }
+  if (filters.doctorMembershipId) {
+    conditions.push(eq(appointments.doctorMembershipId, filters.doctorMembershipId));
+  }
+  if (filters.status) {
+    conditions.push(eq(appointments.status, filters.status));
+  }
 
-//   // Find all appointments for a doctor
-//   async findByDoctor(doctorId: number) {
-//     return db
-//       .select()
-//       .from(appointments)
-//       .where(eq(appointments.doctorId, doctorId));
-//   }
+  return db
+    .select()
+    .from(appointments)
+    .where(and(...conditions))
+    .orderBy(appointments.startTime);
+}
 
-//   // Update appointment
-//   async updateAppointment(id: number, updates: Partial<typeof appointments.$inferInsert>) {
-//     await db.update(appointments).set(updates).where(eq(appointments.id, id));
-//   }
+export async function getAppointmentById(clinicId: string, appointmentId: string): Promise<Appointment | null> {
+  const [appointment] = await db
+    .select()
+    .from(appointments)
+    .where(and(eq(appointments.clinicId, clinicId), eq(appointments.id, appointmentId), isNull(appointments.deletedAt)))
+    .limit(1);
+  return appointment ?? null;
+}
 
-//   // Delete appointment
-//   async deleteAppointment(id: number) {
-//     await db.delete(appointments).where(eq(appointments.id, id));
-//   }
-// }
+/**
+ * Supports the Staff module's deactivation warning (Part 9 edge case:
+ * "this doctor has N upcoming appointments — reassign or cancel them
+ * first"). Counts future, non-canceled, non-completed appointments only.
+ */
+export async function countUpcomingAppointmentsForDoctor(
+  clinicId: string,
+  doctorMembershipId: string,
+): Promise<number> {
+  const rows = await db
+    .select({ id: appointments.id })
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.clinicId, clinicId),
+        eq(appointments.doctorMembershipId, doctorMembershipId),
+        gt(appointments.startTime, new Date()),
+        ne(appointments.status, 'canceled'),
+        ne(appointments.status, 'completed'),
+        isNull(appointments.deletedAt),
+      ),
+    );
+  return rows.length;
+}
+
+/**
+ * Validates that `membershipId` is an active doctor at this clinic — Part
+ * 9's "doctor must have an active membership at this clinic" rule.
+ */
+export async function getActiveDoctorMembership(clinicId: string, membershipId: string) {
+  const [membership] = await db
+    .select()
+    .from(memberships)
+    .where(
+      and(
+        eq(memberships.id, membershipId),
+        eq(memberships.clinicId, clinicId),
+        eq(memberships.role, 'doctor'),
+        eq(memberships.status, 'active'),
+      ),
+    )
+    .limit(1);
+  return membership ?? null;
+}
+
+/**
+ * Application-level slot check — the database exclusion constraint is
+ * the hard backstop (Part 6), this is what lets the service return a
+ * clean 409 SLOT_UNAVAILABLE instead of surfacing a raw DB error most of
+ * the time. `excludeAppointmentId` lets a reschedule check against every
+ * *other* appointment without conflicting with itself.
+ */
+export async function findOverlappingAppointments(
+  clinicId: string,
+  doctorMembershipId: string,
+  startTime: Date,
+  endTime: Date,
+  excludeAppointmentId?: string,
+): Promise<Appointment[]> {
+  const conditions = [
+    eq(appointments.clinicId, clinicId),
+    eq(appointments.doctorMembershipId, doctorMembershipId),
+    ne(appointments.status, 'canceled'),
+    isNull(appointments.deletedAt),
+    lt(appointments.startTime, endTime),
+    gt(appointments.endTime, startTime),
+  ];
+
+  if (excludeAppointmentId) {
+    conditions.push(ne(appointments.id, excludeAppointmentId));
+  }
+
+  return db.select().from(appointments).where(and(...conditions));
+}
+
+export async function insertAppointment(
+  clinicId: string,
+  input: Omit<NewAppointment, 'clinicId'>,
+): Promise<Appointment> {
+  try {
+    const [appointment] = await db
+      .insert(appointments)
+      .values({ ...input, clinicId })
+      .returning();
+    return appointment;
+  } catch (error) {
+    if (isExclusionViolation(error)) {
+      throw new SlotConflictDbError('Doctor already has an overlapping appointment');
+    }
+    throw error;
+  }
+}
+
+export async function updateAppointment(
+  clinicId: string,
+  appointmentId: string,
+  patch: Partial<Omit<NewAppointment, 'clinicId'>>,
+): Promise<Appointment | null> {
+  try {
+    const [appointment] = await db
+      .update(appointments)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(and(eq(appointments.clinicId, clinicId), eq(appointments.id, appointmentId), isNull(appointments.deletedAt)))
+      .returning();
+    return appointment ?? null;
+  } catch (error) {
+    if (isExclusionViolation(error)) {
+      throw new SlotConflictDbError('Doctor already has an overlapping appointment');
+    }
+    throw error;
+  }
+}

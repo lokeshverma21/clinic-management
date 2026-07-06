@@ -1,5 +1,5 @@
 // /lib/auth/user-provisioning.repository.ts
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { users, clinics, memberships } from '@/db/schema';
 import type { NewUser, NewClinic, NewMembership } from '@/db/schema';
@@ -25,6 +25,13 @@ export async function updateUserByClerkId(clerkUserId: string, patch: Partial<Ne
     .where(eq(users.clerkUserId, clerkUserId))
     .returning();
   return user ?? null;
+}
+
+export async function listActiveMembershipsForUser(userId: string) {
+  return db
+    .select()
+    .from(memberships)
+    .where(and(eq(memberships.userId, userId), eq(memberships.status, 'active')));
 }
 
 /**
