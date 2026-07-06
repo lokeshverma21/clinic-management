@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { membershipRoleEnum, membershipStatusEnum } from './enums';
 import { clinics } from './clinics';
 import { users } from './users';
@@ -18,6 +18,11 @@ export const memberships = pgTable(
     userId: uuid('user_id').references(() => users.id, { onDelete: 'restrict' }),
     role: membershipRoleEnum('role').notNull(),
     status: membershipStatusEnum('status').notNull().default('invited'),
+    // Part 7's invite flow needs an identifier for a pending membership
+    // before it has a user_id — this is that identifier, and it's also
+    // what the Staff module checks to block duplicate invites (Part 9).
+    // Kept populated after joining too, as a record of who was invited.
+    invitedEmail: text('invited_email'),
     invitedAt: timestamp('invited_at', { withTimezone: true }),
     joinedAt: timestamp('joined_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -37,3 +42,4 @@ export const memberships = pgTable(
 
 export type Membership = typeof memberships.$inferSelect;
 export type NewMembership = typeof memberships.$inferInsert;
+export type MembershipRole = Membership['role'];
