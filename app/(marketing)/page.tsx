@@ -152,7 +152,7 @@ export default function ClinicLandingPageLight() {
             className="lg:col-span-7 flex flex-col space-y-6"
             initial="hidden"
             animate="visible"
-            variants={fadeInUp}
+            // variants={fadeInUp}
             custom={0}
           >
             {/* Value Badge */}
@@ -268,7 +268,7 @@ export default function ClinicLandingPageLight() {
                   </div>
                   <p className="text-xs font-bold text-slate-800 mb-1">To: Mrs. Sharma (Patient)</p>
                   <p className="text-[11px] text-slate-600 leading-normal bg-slate-50 p-2.5 rounded border border-slate-150">
-                    "Namaste Mrs. Sharma, your appointment with Dr. Gupta is confirmed for today at <span className="text-emerald-700 font-bold">5:30 PM</span>. Tap link to reschedule: map.ly/doc"
+                    &quot;Namaste Mrs. Sharma, your appointment with Dr. Gupta is confirmed for today at <span className="text-emerald-700 font-bold">5:30 PM</span>. Tap link to reschedule: map.ly/doc&quot;
                   </p>
                 </div>
 
