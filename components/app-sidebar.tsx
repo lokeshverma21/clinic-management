@@ -13,8 +13,17 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { LayoutBottomIcon, AudioWave01Icon, CommandIcon, ComputerTerminalIcon, RoboticIcon, BookOpen02Icon, Settings05Icon, CropIcon, PieChartIcon, MapsIcon } from "@hugeicons/core-free-icons"
+import { 
+  AudioWaveform, 
+  Command, 
+  Terminal, 
+  Bot, 
+  BookOpen, 
+  Settings2, 
+  Frame, 
+  PieChart, 
+  Map 
+} from "lucide-react"
 import { Dna } from "lucide-react"
 
 // This is sample data.
@@ -35,14 +44,14 @@ const data = {
     {
       name: "Acme Corp.",
       logo: (
-        <HugeiconsIcon icon={AudioWave01Icon} strokeWidth={2} />
+        <AudioWaveform className="size-4" />
       ),
       plan: "Startup",
     },
     {
       name: "Evil Corp.",
       logo: (
-        <HugeiconsIcon icon={CommandIcon} strokeWidth={2} />
+        <Command className="size-4" />
       ),
       plan: "Free",
     },
@@ -52,7 +61,7 @@ const data = {
       title: "Playground",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={ComputerTerminalIcon} strokeWidth={2} />
+        <Terminal />
       ),
       isActive: true,
       items: [
@@ -74,7 +83,7 @@ const data = {
       title: "Models",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={RoboticIcon} strokeWidth={2} />
+        <Bot />
       ),
       items: [
         {
@@ -95,7 +104,7 @@ const data = {
       title: "Documentation",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={BookOpen02Icon} strokeWidth={2} />
+        <BookOpen />
       ),
       items: [
         {
@@ -120,7 +129,7 @@ const data = {
       title: "Settings",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={Settings05Icon} strokeWidth={2} />
+        <Settings2 />
       ),
       items: [
         {
@@ -147,21 +156,21 @@ const data = {
       name: "Design Engineering",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={CropIcon} strokeWidth={2} />
+        <Frame />
       ),
     },
     {
       name: "Sales & Marketing",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={PieChartIcon} strokeWidth={2} />
+        <PieChart />
       ),
     },
     {
       name: "Travel",
       url: "#",
       icon: (
-        <HugeiconsIcon icon={MapsIcon} strokeWidth={2} />
+        <Map />
       ),
     },
   ],
