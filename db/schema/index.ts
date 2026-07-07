@@ -1,4 +1,5 @@
 export * from './enums';
+export * from './shared-types';
 export * from './users';
 export * from './platformUsers';
 export * from './clinics';

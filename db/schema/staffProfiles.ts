@@ -1,7 +1,8 @@
 import { pgTable, uuid, text, jsonb, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { memberships } from './memberships';
+import type { WeeklyHours } from './shared-types';
 
-export type WorkingHours = Partial<Record<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun', string[]>>;
+export type { WeeklyHours as WorkingHours } from './shared-types';
 
 export const staffProfiles = pgTable(
   'staff_profiles',
@@ -11,7 +12,7 @@ export const staffProfiles = pgTable(
       .notNull()
       .references(() => memberships.id, { onDelete: 'cascade' }),
     specialization: text('specialization'),
-    workingHours: jsonb('working_hours').$type<WorkingHours>(),
+    workingHours: jsonb('working_hours').$type<WeeklyHours>(),
     colorTag: text('color_tag'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
