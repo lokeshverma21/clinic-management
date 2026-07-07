@@ -15,8 +15,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
+import { ChevronRight } from "lucide-react"
 
 export function NavMain({
   items,
@@ -48,7 +47,7 @@ export function NavMain({
             >
               {item.icon}
               <span>{item.title}</span>
-              <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+              <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>

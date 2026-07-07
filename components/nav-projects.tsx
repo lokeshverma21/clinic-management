@@ -16,8 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { MoreHorizontalCircle01Icon, FolderIcon, ArrowRightIcon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { MoreHorizontal, Folder, Forward, Trash2 } from "lucide-react"
 
 export function NavProjects({
   projects,
@@ -48,7 +47,7 @@ export function NavProjects({
                   />
                 }
               >
-                <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
+                <MoreHorizontal />
                 <span className="sr-only">More</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -57,16 +56,16 @@ export function NavProjects({
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <HugeiconsIcon icon={FolderIcon} strokeWidth={2} />
+                  <Folder />
                   <span>View Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <HugeiconsIcon icon={ArrowRightIcon} strokeWidth={2} />
+                  <Forward />
                   <span>Share Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
-                  <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+                  <Trash2 />
                   <span>Delete Project</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -75,7 +74,7 @@ export function NavProjects({
         ))}
         <SidebarMenuItem>
           <SidebarMenuButton className="text-sidebar-foreground/70">
-            <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} className="text-sidebar-foreground/70" />
+            <MoreHorizontal className="text-sidebar-foreground/70" />
             <span>More</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
