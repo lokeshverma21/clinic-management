@@ -11,7 +11,7 @@ export async function getClinicById(clinicId: string): Promise<Clinic | null> {
 
 export async function updateClinic(
   clinicId: string,
-  patch: Partial<Pick<NewClinic, 'name' | 'phone' | 'address' | 'timezone' | 'logoUrl' | 'operatingHours'>>,
+  patch: Partial<Pick<NewClinic, 'name' | 'phone' | 'address' | 'timezone' | 'logoUrl' | 'operatingHours' | 'onboardingCompletedAt'>>,
 ): Promise<Clinic | null> {
   const [clinic] = await db
     .update(clinics)
