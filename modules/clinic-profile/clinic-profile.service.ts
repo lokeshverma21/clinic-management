@@ -17,6 +17,7 @@ function toProfile(clinic: Clinic): ClinicProfile {
     operatingHours: clinic.operatingHours ?? null,
     status: clinic.status,
     trialEndsAt: clinic.trialEndsAt,
+    onboardingCompletedAt: clinic.onboardingCompletedAt ?? null,
   };
 }
 
@@ -49,7 +50,16 @@ export async function updateClinicProfile(
     throw new ForbiddenError('OWNER_ONLY', 'Only the clinic owner can edit the clinic profile');
   }
 
-  const clinic = await clinicProfileRepository.updateClinic(ctx.clinicId, input);
+  const existingClinic = await clinicProfileRepository.getClinicById(ctx.clinicId);
+
+  if (!existingClinic) {
+    throw new NotFoundError('CLINIC_NOT_FOUND', 'Clinic not found');
+  }
+
+  const clinic = await clinicProfileRepository.updateClinic(ctx.clinicId, {
+    ...input,
+    onboardingCompletedAt: existingClinic.onboardingCompletedAt ?? new Date(),
+  });
   if (!clinic) throw new NotFoundError('CLINIC_NOT_FOUND', 'Clinic not found');
   return toProfile(clinic);
 }

@@ -14,6 +14,7 @@ export interface ClinicProfile {
   operatingHours: WeeklyHours | null;
   status: Clinic['status'];
   trialEndsAt: Date | null;
+  onboardingCompletedAt: Date | null;
 }
 
 /**

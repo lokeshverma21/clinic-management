@@ -22,6 +22,7 @@ export const clinics = pgTable(
     operatingHours: jsonb('operating_hours').$type<WeeklyHours>(),
     status: clinicStatusEnum('status').notNull().default('trial'),
     trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+    onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
