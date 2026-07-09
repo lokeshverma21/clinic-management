@@ -5,12 +5,24 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { getRequestContext } from "@/lib/auth/request-context";
+import { getClinicProfile } from "@/modules/clinic-profile";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const ctx = await getRequestContext();
+
+  const clinic = await getClinicProfile(ctx);
+
+  if (!clinic.onboardingCompletedAt) {
+      redirect("/onboarding/clinic");
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
