@@ -8,6 +8,13 @@
       "when": 1783233700170,
       "tag": "0000_polite_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783615167617,
+      "tag": "0001_spotty_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

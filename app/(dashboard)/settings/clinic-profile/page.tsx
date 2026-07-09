@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function SettingsClinicProfilePage() {
   return (
-    <div className="container max-w-4xl py-10 mx-auto">
+    <div className="container max-w-4xl py-2 mx-auto">
       <ClinicProfileHeader 
         title="Clinic Profile" 
         subtitle="Manage your clinic information and operating hours." 
