@@ -31,6 +31,7 @@ export function OperatingHoursEditor({ value, onChange, error }: OperatingHoursE
   const hours = value || {};
 
   const handleToggleDay = (day: DayKey, checked: boolean) => {
+    console.log(day, checked)
     const newHours = { ...hours };
     if (checked) {
       newHours[day] = ["09:00-17:00"];

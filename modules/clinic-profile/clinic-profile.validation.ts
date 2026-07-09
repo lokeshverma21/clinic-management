@@ -25,7 +25,18 @@ const timezoneSchema = z
   });
 
 const dayKeySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
-const weeklyHoursSchema = z.record(dayKeySchema, z.array(z.string())).nullable().optional();
+const weeklyHoursSchema = z.object({
+  mon: z.array(z.string()).optional(),
+  tue: z.array(z.string()).optional(),
+  wed: z.array(z.string()).optional(),
+  thu: z.array(z.string()).optional(),
+  fri: z.array(z.string()).optional(),
+  sat: z.array(z.string()).optional(),
+  sun: z.array(z.string()).optional(),
+})
+.partial()
+.nullable()
+.optional();
 
 export const updateClinicProfileSchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),

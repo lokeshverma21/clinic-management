@@ -61,33 +61,36 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
     name: "",
     phone: "",
     address: "",
-    timezone: "UTC",
+    timezone: "Asia/Kolkata",
     logoUrl: null,
     operatingHours: null,
   });
 
-  const fetchData = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch("/api/clinic-profile");
-      const data = await res.json();
-      
-      if (data.success) {
-        setProfile(data.clinic);
-      } else {
-        setError(data.error?.message || "Failed to load clinic profile");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   React.useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+      async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch("/api/clinic-profile");
+        console.log(res)
+        const data = await res.json();
+
+        if (data.success) {
+          setProfile(data.data?.clinic);
+        } else {
+          setError(data.error?.message ?? "Failed to load clinic profile");
+        }
+      } catch {
+        setError("An unexpected error occurred");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +99,7 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
     setSuccess(false);
 
     try {
+      // console.log(profile)
       const res = await fetch("/api/clinic-profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -123,7 +127,7 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
   };
 
   if (loading) return <ClinicProfileLoading />;
-  if (error && !profile.name) return <ClinicProfileError onRetry={fetchData} message={error} />;
+  if (error && !profile.name) return <ClinicProfileError onRetry={() => {}} message={error} />;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -164,7 +168,7 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
                   <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="phone" 
-                    value={profile.phone || ""}
+                    value={profile.phone ?? ""}
                     onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="+1 (555) 000-0000" 
                     className="pl-9 h-10 bg-background text-sm" 
@@ -178,7 +182,7 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
                   <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="address" 
-                    value={profile.address || ""}
+                    value={profile.address ?? ""}
                     onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
                     placeholder="123 Health St, Medical District" 
                     className="pl-9 h-10 bg-background text-sm" 
@@ -191,8 +195,8 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
                 <div className="relative">
                   <Globe className="absolute left-2.5 top-[11px] h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                   <Select 
-                    value={profile.timezone} 
-                    onValueChange={(val) => setProfile(prev => ({ ...prev, timezone: val }))}
+                    value={profile.timezone ?? "Asia/Kolkata"} 
+                    onValueChange={(val) => setProfile(prev => ({ ...prev, timezone: val || undefined }))}
                   >
                     <SelectTrigger className="pl-9 h-10 bg-background text-sm">
                       <SelectValue placeholder="Select timezone" />
@@ -212,7 +216,7 @@ export function ClinicProfileForm({ mode }: ClinicProfileFormProps) {
 
         {/* Operating Hours Card */}
         <Card className="shadow-none border-border/60 overflow-hidden">
-          <CardContent className="p-0">
+          <CardContent className="p-6">
             <OperatingHoursEditor 
               value={profile.operatingHours || null}
               onChange={(val) => setProfile(prev => ({ ...prev, operatingHours: val }))}

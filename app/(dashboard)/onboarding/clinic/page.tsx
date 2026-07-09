@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function OnboardingClinicPage() {
   return (
-    <div className="container max-w-4xl py-10 mx-auto">
+    <div className="container max-w-4xl py-2 mx-auto">
       <ClinicProfileHeader 
         title="Let's set up your clinic" 
         subtitle="Complete your clinic profile to start using ClinicOS." 
