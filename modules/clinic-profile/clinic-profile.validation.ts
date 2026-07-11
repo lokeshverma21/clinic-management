@@ -24,7 +24,7 @@ const timezoneSchema = z
     message: 'Must be a valid IANA timezone identifier, e.g. "America/New_York"',
   });
 
-const dayKeySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+// const dayKeySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
 const weeklyHoursSchema = z.object({
   mon: z.array(z.string()).optional(),
   tue: z.array(z.string()).optional(),

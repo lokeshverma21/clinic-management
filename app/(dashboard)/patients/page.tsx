@@ -51,7 +51,7 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className="container p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="container p-4 sm:p-6 lg:p-2 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <PatientHeader onAddPatient={handleAddPatient} />
       
       <PatientStats />
