@@ -96,6 +96,12 @@ function StaffEditForm({
     setError("")
 
     try {
+      console.log(JSON.stringify({
+          role,
+          specialization: specialization.trim() || null,
+          colorTag: colorTag.trim() || null,
+          workingHours,
+        }),)
       const response = await fetch(`/api/staff/${staff.membershipId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -107,7 +113,9 @@ function StaffEditForm({
         }),
       })
 
+      
       const result = await response.json()
+      console.log(result)
       if (!response.ok) throw new Error(result.error?.message ?? "Failed to update staff.")
 
       onSuccess?.()
