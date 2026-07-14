@@ -6,7 +6,18 @@ const invitableRoleSchema = z.enum(['doctor', 'receptionist']);
 const anyRoleSchema = z.enum(['owner', 'doctor', 'receptionist']);
 
 const dayKeySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
-const workingHoursSchema = z.record(dayKeySchema, z.array(z.string())).nullable().optional();
+const workingHoursSchema = z.object({
+  mon: z.array(z.string()).optional(),
+  tue: z.array(z.string()).optional(),
+  wed: z.array(z.string()).optional(),
+  thu: z.array(z.string()).optional(),
+  fri: z.array(z.string()).optional(),
+  sat: z.array(z.string()).optional(),
+  sun: z.array(z.string()).optional(),
+})
+// .partial()
+.nullable()
+.optional();
 
 export const inviteStaffSchema = z.object({
   email: z.string().trim().email(),
