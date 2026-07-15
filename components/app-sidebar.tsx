@@ -22,9 +22,14 @@ import {
   Settings2, 
   Frame, 
   PieChart, 
-  Map 
+  Map, 
+  UserSquare2,
+  Users,
+  Calendar,
+  LayoutDashboard
 } from "lucide-react"
 import { Dna } from "lucide-react"
+import Image from "next/image"
 
 // This is sample data.
 const data = {
@@ -41,20 +46,20 @@ const data = {
       ),
       plan: "Enterprise",
     },
-    {
-      name: "Acme Corp.",
-      logo: (
-        <AudioWaveform className="size-4" />
-      ),
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: (
-        <Command className="size-4" />
-      ),
-      plan: "Free",
-    },
+    // {
+    //   name: "Acme Corp.",
+    //   logo: (
+    //     <AudioWaveform className="size-4" />
+    //   ),
+    //   plan: "Startup",
+    // },
+    // {
+    //   name: "Evil Corp.",
+    //   logo: (
+    //     <Command className="size-4" />
+    //   ),
+    //   plan: "Free",
+    // },
   ],
   
   navMain: [
@@ -134,21 +139,21 @@ const data = {
       ),
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "Clinic Profile",
+          url: "/settings/clinic-profile",
         },
-        {
-          title: "Team",
-          url: "#",
-        },
+        // {
+        //   title: "Team",
+        //   url: "#",
+        // },
         {
           title: "Billing",
-          url: "#",
+          url: "/settings/billing",
         },
-        {
-          title: "Limits",
-          url: "#",
-        },
+        // {
+        //   title: "Limits",
+        //   url: "#",
+        // },
       ],
     },
   ],
@@ -184,18 +189,60 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user: {
+    name: string
+    email: string
+    avatar?: string
+  }
+  clinic: {
+    name: string
+    logoUrl?: string | null
+    plan: string
+  }
+}
+
+export function AppSidebar({user, clinic,...props }: AppSidebarProps) {
+
+  const navigation = {
+    teams: [
+      {
+        name: clinic.name,
+        logo: clinic.logoUrl ? <Image src={clinic.logoUrl} alt={clinic.name} width={32} height={32} /> : <Dna />,
+        plan: clinic.plan,
+      },
+    ],
+    navMain: [
+      {
+        title: "Settings",
+        url: "#",
+        icon: <Settings2 />,
+        items: [
+          { title: "Clinic Profile", url: "/settings/clinic-profile" },
+          { title: "Billing", url: "/settings/billing" },
+        ],
+      },
+    ],
+    projects: [
+      { name: "Dashboard", url: "/dashboard", icon: <LayoutDashboard /> },
+      { name: "Appointments", url: "/appointments", icon:  <Calendar /> },
+      { name: "Patients", url: "/patients", icon: <Users /> },
+      { name: "Staff", url: "/staff", icon: <UserSquare2 /> },
+    ],
+  }
+  
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={navigation.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavProjects projects={data.projects} />
-        <NavMain items={data.navMain} />
+        <NavProjects projects={navigation.projects} />
+        <NavMain items={navigation.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

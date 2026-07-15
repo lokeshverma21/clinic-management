@@ -8,12 +8,16 @@ import { Separator } from "@/components/ui/separator";
 import { getRequestContext } from "@/lib/auth/request-context";
 import { getClinicProfile } from "@/modules/clinic-profile";
 import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const user = await currentUser()
+  if (!user) redirect("/sign-in")
 
   const ctx = await getRequestContext();
 
@@ -23,9 +27,21 @@ export default async function DashboardLayout({
       redirect("/onboarding/clinic");
   }
 
+  const sidebarUser = {
+    name: `${user.firstName} ${user.lastName}`,
+    email: user.emailAddresses[0].emailAddress,
+    avatar: user.imageUrl,
+  }
+
+  const sidebarClinic = {
+    name: clinic.name,
+    logoUrl: clinic.logoUrl,
+    plan: clinic.status.toUpperCase(), // e.g., 'TRIAL', 'ACTIVE'
+  }
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={sidebarUser} clinic={sidebarClinic} />
 
       <SidebarInset>
         <header className="flex h-16 items-center gap-2 border-b px-4">
