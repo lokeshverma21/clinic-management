@@ -1,8 +1,9 @@
 // src/modules/appointments/appointment.repository.ts
 import { and, eq, gt, lt, ne, isNull } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { appointments, memberships } from '@/db/schema';
+import { appointments, memberships, patients, users } from '@/db/schema';
 import type { NewAppointment, Appointment } from '@/db/schema';
+import type { AppointmentWithDetails } from './appointment.types';
 
 /**
  * Thrown when the database's EXCLUDE constraint (Part 6) rejects an
@@ -20,7 +21,7 @@ function isExclusionViolation(error: unknown): boolean {
 export async function listAppointments(
   clinicId: string,
   filters: { from: Date; to: Date; doctorMembershipId?: string; status?: Appointment['status'] },
-): Promise<Appointment[]> {
+): Promise<AppointmentWithDetails[]> {
   const conditions = [
     eq(appointments.clinicId, clinicId),
     isNull(appointments.deletedAt),
@@ -37,11 +38,42 @@ export async function listAppointments(
     conditions.push(eq(appointments.status, filters.status));
   }
 
-  return db
-    .select()
+  const rows = await db
+    .select({
+      appointment: appointments,
+      patient: {
+        id: patients.id,
+        fullName: patients.fullName,
+        phone: patients.phone,
+        email: patients.email,
+      },
+      doctor: {
+        membershipId: memberships.id,
+        fullName: users.fullName,
+        email: users.email,
+      },
+    })
     .from(appointments)
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .innerJoin(memberships, eq(appointments.doctorMembershipId, memberships.id))
+    .innerJoin(users, eq(memberships.userId, users.id))
     .where(and(...conditions))
     .orderBy(appointments.startTime);
+
+  return rows.map((row) => ({
+    ...row.appointment,
+    patient: {
+      id: row.patient.id,
+      fullName: row.patient.fullName,
+      phone: row.patient.phone,
+      email: row.patient.email,
+    },
+    doctor: {
+      membershipId: row.doctor.membershipId,
+      fullName: row.doctor.fullName,
+      email: row.doctor.email,
+    },
+  }));
 }
 
 export async function getAppointmentById(clinicId: string, appointmentId: string): Promise<Appointment | null> {

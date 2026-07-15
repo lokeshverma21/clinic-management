@@ -24,62 +24,65 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { AppointmentStatusBadge, type AppointmentStatus } from "./appointment-status-badge"
+import { AppointmentStatusBadge } from "./appointment-status-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { format } from "date-fns"
+import type { AppointmentWithDetails } from "../appointment.types"
 
-interface AppointmentRow {
-  id: string;
-  time: string;
-  patient: { name: string; phone: string };
-  doctor: string;
-  status: AppointmentStatus;
-  notes: string;
+interface AppointmentTableProps {
+  appointments: AppointmentWithDetails[];
+  onViewDetails: (appointment: AppointmentWithDetails) => void;
+  onEdit: (appointment: AppointmentWithDetails) => void;
+  onRefresh: () => void;
 }
 
-const mockTableData: AppointmentRow[] = [
-  {
-    id: "1",
-    time: "09:00 AM",
-    patient: { name: "Sarah Connor", phone: "+1 234 567 890" },
-    doctor: "Dr. Smith",
-    status: "completed",
-    notes: "Follow-up for chronic knee pain. Patient mentioned slight improvement since last visit.",
-  },
-  {
-    id: "2",
-    time: "09:30 AM",
-    patient: { name: "John Doe", phone: "+1 987 654 321" },
-    doctor: "Dr. Smith",
-    status: "confirmed",
-    notes: "New patient consultation.",
-  },
-  {
-    id: "3",
-    time: "09:30 AM",
-    patient: { name: "Jane Miller", phone: "+1 555 012 345" },
-    doctor: "Dr. Johnson",
-    status: "booked",
-    notes: "Annual physical exam.",
-  },
-  {
-    id: "4",
-    time: "10:00 AM",
-    patient: { name: "Michael Scott", phone: "+1 444 999 111" },
-    doctor: "Dr. Johnson",
-    status: "no_show",
-    notes: "Requested earlier slot but didn't confirm.",
-  },
-  {
-    id: "5",
-    time: "11:00 AM",
-    patient: { name: "Pam Beesly", phone: "+1 777 888 222" },
-    doctor: "Dr. Smith",
-    status: "booked",
-    notes: "Post-surgery checkup.",
-  },
-];
+export function AppointmentTable({ 
+  appointments, 
+  onViewDetails, 
+  onEdit, 
+  onRefresh 
+}: AppointmentTableProps) {
 
-export function AppointmentTable() {
+  const handleUpdateStatus = async (id: string, status: "completed") => {
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) {
+        throw new Error("Failed to update status")
+      }
+      onRefresh()
+    } catch (err) {
+      console.error(err)
+      alert("Error updating appointment status")
+    }
+  }
+
+  const handleCancelAppointment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        throw new Error("Failed to cancel appointment")
+      }
+      onRefresh()
+    } catch (err) {
+      console.error(err)
+      alert("Error cancelling appointment")
+    }
+  }
+
+  if (appointments.length === 0) {
+    return (
+      <div className="rounded-lg border border-border/60 p-8 text-center text-sm text-muted-foreground bg-card">
+        No appointments found for the selected criteria.
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-lg border border-border/60 overflow-hidden bg-card">
       <Table>
@@ -94,63 +97,77 @@ export function AppointmentTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockTableData.map((row) => (
-            <TableRow key={row.id} className="group hover:bg-muted/30 transition-colors border-border/50">
-              <TableCell className="font-medium align-top py-4">{row.time}</TableCell>
-              <TableCell className="align-top py-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8 border border-border/60">
-                    <AvatarFallback className="text-[10px] bg-primary/5 text-primary">
-                      {row.patient.name.split(" ").map(n => n[0]).join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm group-hover:text-primary transition-colors">{row.patient.name}</span>
-                    <span className="text-xs text-muted-foreground">{row.patient.phone}</span>
+          {appointments.map((apt) => {
+            const timeFormatted = format(new Date(apt.startTime), "hh:mm a")
+            const isCompletedOrCanceled = apt.status === "completed" || apt.status === "canceled"
+
+            return (
+              <TableRow key={apt.id} className="group hover:bg-muted/30 transition-colors border-border/50">
+                <TableCell className="font-medium align-top py-4">{timeFormatted}</TableCell>
+                <TableCell className="align-top py-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8 border border-border/60">
+                      <AvatarFallback className="text-[10px] bg-primary/5 text-primary">
+                        {apt.patient.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span 
+                        className="font-medium text-sm group-hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => onViewDetails(apt)}
+                      >
+                        {apt.patient.fullName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{apt.patient.phone}</span>
+                    </div>
                   </div>
-                </div>
-              </TableCell>
-              <TableCell className="align-top py-4">
-                <span className="text-sm">{row.doctor}</span>
-              </TableCell>
-              <TableCell className="align-top py-4">
-                <AppointmentStatusBadge status={row.status} />
-              </TableCell>
-              <TableCell className="max-w-xs truncate text-muted-foreground text-sm align-top py-4 hidden lg:table-cell">
-                {row.notes}
-              </TableCell>
-              <TableCell className="text-right align-top py-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                        <MoreHorizontal size={16} />
-                      </Button>
-                    }
-                  />
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="gap-2">
-                       <Eye size={16} className="text-muted-foreground" />
-                       View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2">
-                       <Pencil size={16} className="text-muted-foreground" />
-                       Edit Appointment
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2">
-                       <CheckCircle2 size={16} className="text-green-600" />
-                       Mark Completed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 text-destructive">
-                       <XCircle size={16} />
-                       Cancel Appointment
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell className="align-top py-4">
+                  <span className="text-sm">{apt.doctor.fullName}</span>
+                </TableCell>
+                <TableCell className="align-top py-4">
+                  <AppointmentStatusBadge status={apt.status} />
+                </TableCell>
+                <TableCell className="max-w-xs truncate text-muted-foreground text-sm align-top py-4 hidden lg:table-cell">
+                  {apt.notes || "-"}
+                </TableCell>
+                <TableCell className="text-right align-top py-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                          <MoreHorizontal size={16} />
+                        </Button>
+                      }
+                    />
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem className="gap-2" onClick={() => onViewDetails(apt)}>
+                         <Eye size={16} className="text-muted-foreground" />
+                         View Details
+                      </DropdownMenuItem>
+                      {!isCompletedOrCanceled && (
+                        <>
+                          <DropdownMenuItem className="gap-2" onClick={() => onEdit(apt)}>
+                             <Pencil size={16} className="text-muted-foreground" />
+                             Edit Appointment
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="gap-2" onClick={() => handleUpdateStatus(apt.id, "completed")}>
+                             <CheckCircle2 size={16} className="text-green-600" />
+                             Mark Completed
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="gap-2 text-destructive" onClick={() => handleCancelAppointment(apt.id)}>
+                             <XCircle size={16} />
+                             Cancel Appointment
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </div>

@@ -49,31 +49,32 @@ function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
   )
 }
 
-export function PatientStats() {
+interface PatientStatsProps {
+  total: number;
+}
+
+export function PatientStats({ total }: PatientStatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard 
         title="Total Patients" 
-        value="1,280" 
+        value={total} 
         icon={Users} 
-        trend={{ value: 8, isUp: true }}
       />
       <StatCard 
         title="New This Month" 
-        value="42" 
+        value="1" 
         icon={UserPlus} 
-        trend={{ value: 15, isUp: true }}
       />
       <StatCard 
         title="Recent Visits" 
-        value="156" 
+        value="0" 
         icon={History} 
       />
       <StatCard 
         title="Archived Patients" 
-        value="14" 
+        value="0" 
         icon={Archive} 
-        trend={{ value: 2, isUp: false }}
       />
     </div>
   )

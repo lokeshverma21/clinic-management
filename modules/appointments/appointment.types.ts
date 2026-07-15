@@ -4,6 +4,20 @@ import type { Appointment } from '@/db/schema';
 export type { Appointment };
 export type AppointmentStatus = Appointment['status'];
 
+export interface AppointmentWithDetails extends Appointment {
+  patient: {
+    id: string;
+    fullName: string;
+    phone: string;
+    email: string | null;
+  };
+  doctor: {
+    membershipId: string;
+    fullName: string;
+    email: string;
+  };
+}
+
 export interface CreateAppointmentInput {
   patientId: string;
   doctorMembershipId: string;
@@ -27,5 +41,5 @@ export interface ListAppointmentsFilters {
 }
 
 export interface ListAppointmentsResult {
-  appointments: Appointment[];
+  appointments: AppointmentWithDetails[];
 }

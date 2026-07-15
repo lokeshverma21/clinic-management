@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import type { AppointmentWithDetails } from "../appointment.types"
 
 interface StatCardProps {
   title: string;
@@ -49,31 +50,37 @@ function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
   )
 }
 
-export function AppointmentStats() {
+interface AppointmentStatsProps {
+  appointments: AppointmentWithDetails[];
+}
+
+export function AppointmentStats({ appointments }: AppointmentStatsProps) {
+  const total = appointments.length
+  const confirmed = appointments.filter(a => a.status === "confirmed").length
+  const completed = appointments.filter(a => a.status === "completed").length
+  const cancelled = appointments.filter(a => a.status === "canceled").length
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard 
-        title="Today's Appointments" 
-        value="24" 
+        title="Schedule Appointments" 
+        value={total} 
         icon={Calendar} 
-        trend={{ value: 12, isUp: true }}
       />
       <StatCard 
-        title="Today's Confirmed" 
-        value="18" 
+        title="Confirmed" 
+        value={confirmed} 
         icon={CheckCircle2} 
-        trend={{ value: 5, isUp: true }}
       />
       <StatCard 
-        title="Completed Today" 
-        value="12" 
+        title="Completed" 
+        value={completed} 
         icon={Clock} 
       />
       <StatCard 
-        title="Cancelled Today" 
-        value="2" 
+        title="Cancelled" 
+        value={cancelled} 
         icon={XCircle} 
-        trend={{ value: 1, isUp: false }}
       />
     </div>
   )
