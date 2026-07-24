@@ -1,5 +1,5 @@
 // src/modules/appointments/appointment.repository.ts
-import { and, eq, gt, lt, ne, isNull } from 'drizzle-orm';
+import { and, eq, gt, lt, ne, isNull, or } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { appointments, memberships, patients, users } from '@/db/schema';
 import type { NewAppointment, Appointment } from '@/db/schema';
@@ -122,7 +122,10 @@ export async function getActiveDoctorMembership(clinicId: string, membershipId: 
       and(
         eq(memberships.id, membershipId),
         eq(memberships.clinicId, clinicId),
-        eq(memberships.role, 'doctor'),
+        or(
+          eq(memberships.role, "doctor"),
+          eq(memberships.role, "owner"),
+        ),
         eq(memberships.status, 'active'),
       ),
     )

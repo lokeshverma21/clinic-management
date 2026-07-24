@@ -142,7 +142,7 @@ export function AppointmentDialog({
 
         const activeDoctors = (
           (staffJson as { data: { staff: StaffListItem[] } }).data.staff
-        ).filter((m) => m.role === "doctor" && m.status === "active")
+        ).filter((m) => (m.role === "doctor" || m.role === "owner") && m.status === "active")
 
         setDataStatus({
           type: "ready",
