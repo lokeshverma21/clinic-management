@@ -146,7 +146,7 @@ export async function deactivateStaff(ctx: RequestContext, membershipId: string)
   if (!membership) throw new NotFoundError('STAFF_NOT_FOUND', 'Staff member not found');
 
   const upcomingAppointmentsCount =
-    existing.role === 'doctor'
+    (existing.role === "doctor" || existing.role === "owner")
       ? await countUpcomingAppointmentsForMembership(ctx, membershipId)
       : 0;
 
