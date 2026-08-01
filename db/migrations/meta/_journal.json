@@ -15,6 +15,13 @@
       "when": 1783615167617,
       "tag": "0001_spotty_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785144808903,
+      "tag": "0002_gigantic_hammerhead",
+      "breakpoints": true
     }
   ]
 }

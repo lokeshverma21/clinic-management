@@ -26,7 +26,8 @@ import {
   UserSquare2,
   Users,
   Calendar,
-  LayoutDashboard
+  LayoutDashboard,
+  Receipt
 } from "lucide-react"
 import { Dna } from "lucide-react"
 import Image from "next/image"
@@ -229,6 +230,7 @@ export function AppSidebar({user, clinic,...props }: AppSidebarProps) {
       { name: "Appointments", url: "/appointments", icon:  <Calendar /> },
       { name: "Patients", url: "/patients", icon: <Users /> },
       { name: "Staff", url: "/staff", icon: <UserSquare2 /> },
+      { name: "Billing", url: "/billing", icon: <Receipt /> },
     ],
   }
   
@@ -241,9 +243,9 @@ export function AppSidebar({user, clinic,...props }: AppSidebarProps) {
         <NavProjects projects={navigation.projects} />
         <NavMain items={navigation.navMain} />
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <NavUser user={user} />
-      </SidebarFooter>
+      </SidebarFooter> */}
       <SidebarRail />
     </Sidebar>
   )

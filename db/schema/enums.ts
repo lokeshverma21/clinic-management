@@ -80,8 +80,11 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
 // invoices.status — clinic → patient billing (Part 6/9), separate from subscriptions
 export const invoiceStatusEnum = pgEnum('invoice_status', [
   'draft',
-  'sent',
+  'unpaid',
+  'partially_paid',
   'paid',
+  'cancelled',
+  'refunded',
   'overdue',
   'void',
 ]);
