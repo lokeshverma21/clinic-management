@@ -9,6 +9,7 @@ import { getRequestContext } from "@/lib/auth/request-context";
 import { getClinicProfile } from "@/modules/clinic-profile";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
+import { Show, UserButton } from "@clerk/nextjs";
 
 export default async function DashboardLayout({
   children,
@@ -44,16 +45,21 @@ export default async function DashboardLayout({
       <AppSidebar user={sidebarUser} clinic={sidebarClinic} />
 
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 border-b px-4">
-          <SidebarTrigger />
+        <header className="flex h-16 items-center justify-between gap-2 border-b px-4">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
 
-          <Separator
-            orientation="vertical"
-            className="h-4"
-          />
+            <Separator
+              orientation="vertical"
+              className="h-4"
+            />
 
-          {/* Later you can add breadcrumbs, search, profile, etc. */}
-          <h1 className="font-medium">ClinicOS</h1>
+            {/* Later you can add breadcrumbs, search, profile, etc. */}
+            <h1 className="font-medium">ClinicOS</h1>
+          </div>
+          <Show when="signed-in">
+              <UserButton />
+          </Show>
         </header>
 
         <main className="flex-1 p-6">

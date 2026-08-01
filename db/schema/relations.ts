@@ -39,6 +39,7 @@ export const membershipsRelations = relations(memberships, ({ one, many }) => ({
   }),
   doctorAppointments: many(appointments, { relationName: 'doctorAppointments' }),
   createdAppointments: many(appointments, { relationName: 'createdAppointments' }),
+  doctorInvoices: many(invoices, { relationName: 'doctorInvoices' }),
   auditLogs: many(auditLogs),
 }));
 
@@ -92,6 +93,11 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   appointment: one(appointments, {
     fields: [invoices.appointmentId],
     references: [appointments.id],
+  }),
+  doctor: one(memberships, {
+    fields: [invoices.doctorMembershipId],
+    references: [memberships.id],
+    relationName: 'doctorInvoices',
   }),
   items: many(invoiceItems),
 }));

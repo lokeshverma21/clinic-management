@@ -11,6 +11,9 @@ export const invoiceItems = pgTable(
     description: text('description').notNull(),
     quantity: integer('quantity').notNull(),
     unitPrice: numeric('unit_price', { precision: 10, scale: 2 }).notNull(),
+    discount: numeric('discount', { precision: 10, scale: 2 }).notNull().default('0.00'),
+    tax: numeric('tax', { precision: 10, scale: 2 }).notNull().default('0.00'),
+    totalPrice: numeric('total_price', { precision: 10, scale: 2 }).notNull().default('0.00'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
@@ -20,3 +23,4 @@ export const invoiceItems = pgTable(
 
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
 export type NewInvoiceItem = typeof invoiceItems.$inferInsert;
+
