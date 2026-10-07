@@ -6,6 +6,7 @@ export * from './clinics';
 export * from './memberships';
 export * from './staffProfiles';
 export * from './subscriptions';
+export * from './subscriptionWebhookEvents';
 export * from './patients';
 export * from './appointments';
 export * from './notifications';

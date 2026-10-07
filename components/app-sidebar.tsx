@@ -221,7 +221,7 @@ export function AppSidebar({user, clinic,...props }: AppSidebarProps) {
         icon: <Settings2 />,
         items: [
           { title: "Clinic Profile", url: "/settings/clinic-profile" },
-          { title: "Billing", url: "/settings/billing" },
+          { title: "Subscription", url: "/settings/subscription" },
         ],
       },
     ],

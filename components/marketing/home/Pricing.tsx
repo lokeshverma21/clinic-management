@@ -1,301 +1,135 @@
-"use client";
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Reveal } from './Reveal'
 
-import { useRef, useEffect, useState, useCallback } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Calendar, FileText, CreditCard, Crown, ArrowRight, Check, Clock } from "lucide-react";
-
-gsap.registerPlugin(ScrollTrigger);
-
-interface Plan {
-  name: string;
-  price: string;
-  period: string;
-  description: string;
-  features: string[];
-  color: string;
-  glowColor: string;
-  popular?: boolean;
-}
-
-const plans: Plan[] = [
+const PLANS = [
   {
-    name: "Starter",
-    price: "Free",
-    period: "forever",
-    description: "For solo practitioners getting started with digital management.",
-    features: ["Up to 50 appointments/month", "Basic patient records", "Email reminders", "Standard billing"],
-    color: "#6B7280",
-    glowColor: "rgba(107,114,128,0.15)",
-  },
-  {
-    name: "Professional",
-    price: "$79",
-    period: "/month",
-    description: "The complete toolkit for growing practices that demand precision.",
+    name: 'Starter',
+    price: '₹999',
+    period: '/clinic /month',
+    blurb: 'For a solo doctor replacing the paper register.',
     features: [
-      "Unlimited appointments",
-      "Advanced patient records",
-      "SMS + email reminders",
-      "Auto-coded billing",
-      "Revenue analytics",
-      "Priority support",
+      '1 doctor, 2 staff seats',
+      'Appointments & patient records',
+      'WhatsApp confirmations',
+      'Daily schedule view',
     ],
-    color: "#0D4F4F",
-    glowColor: "rgba(13,79,79,0.2)",
-    popular: true,
+    cta: 'Start free trial',
+    highlight: false,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    description: "For multi-location practices and healthcare groups.",
+    name: 'Growth',
+    price: '₹2,499',
+    period: '/clinic /month',
+    blurb: 'For clinics that live on their appointment book.',
     features: [
-      "Everything in Professional",
-      "Multi-location management",
-      "Custom integrations",
-      "Dedicated account manager",
-      "API access",
-      "SLA guarantee",
-      "Custom onboarding",
+      'Up to 5 doctors, 10 staff seats',
+      'Automatic 24h + 1h WhatsApp reminders',
+      'Invoices & basic billing',
+      'Reports: revenue, no-shows, busiest hours',
+      'Priority support',
     ],
-    color: "#1A2E35",
-    glowColor: "rgba(26,46,53,0.2)",
+    cta: 'Start free trial',
+    highlight: true,
   },
-];
+  {
+    name: 'Multi-Branch',
+    price: 'Let’s talk',
+    period: '',
+    blurb: 'For chains that need one view across locations.',
+    features: [
+      'Unlimited branches & staff',
+      'Centralized reporting across clinics',
+      'Role hierarchies per branch',
+      'Dedicated onboarding',
+    ],
+    cta: 'Contact us',
+    highlight: false,
+  },
+]
 
-export default function Pricing() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [activePlan, setActivePlan] = useState(1); // Professional by default
-  const [scrollX, setScrollX] = useState(0);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: "top 80%",
-        end: "bottom 20%",
-        scrub: 1,
-      },
-    });
-
-    tl.fromTo(
-      ".pricing-card",
-      { opacity: 0, y: 60, scale: 0.95 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.15, ease: "power3.out" }
-    );
-
-    return () => {
-      tl.kill();
-      ScrollTrigger.getAll().forEach((st) => st.kill());
-    };
-  }, []);
-
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    setScrollX(e.currentTarget.scrollLeft);
-  }, []);
-
+export function Pricing() {
   return (
-    <section
-      ref={sectionRef}
-      id="pricing"
-      className="relative py-32 md:py-48 overflow-hidden"
-    >
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sterile-white via-sage-mist/30 to-sterile-white" />
+    <section id="pricing" className="scroll-mt-24 py-24 sm:py-32">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+        <Reveal>
+          <p className="micro-label text-deep-teal">Pricing</p>
+        </Reveal>
+        <Reveal delay={80}>
+          <h2 className="mt-4 max-w-[24ch] text-[32px] font-semibold leading-[1.1] tracking-[-0.03em] text-shadow-blue sm:text-[44px]">
+            Fair pricing that{' '}
+            <em className="font-accent font-normal italic text-deep-teal">grows with you.</em>
+          </h2>
+        </Reveal>
+        <Reveal delay={160}>
+          <p className="mt-5 max-w-[52ch] text-[15px] leading-relaxed text-shadow-blue-light">
+            Per clinic, not per patient. Every plan starts with a 14-day free trial — fill a real
+            week of appointments before you pay a rupee.
+          </p>
+        </Reveal>
 
-      {/* Ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-deep-teal/5 rounded-full blur-[120px]" />
-
-      {/* Section header */}
-      <div className="text-center px-6 mb-16">
-        <span className="font-body text-deep-teal text-sm font-semibold tracking-widest uppercase">The Investment</span>
-        <h2 className="font-display font-800 text-[clamp(2.5rem,5vw,4rem)] leading-[0.95] tracking-[-0.03em] text-shadow-blue mt-4">
-          Choose your path to
-          <br />
-          <span className="gradient-text">calm practice management</span>
-        </h2>
-        <p className="font-body text-shadow-blue/50 text-lg mt-4 max-w-lg mx-auto">
-          No hidden fees. No long-term contracts. Just a platform that grows with your practice.
-        </p>
-      </div>
-
-      {/* Spectrum slider */}
-      <div className="relative px-6 md:px-12 max-w-6xl mx-auto mb-12">
-        {/* Spectrum track */}
-        <div className="spectrum-track mx-auto w-full max-w-md mb-8" />
-
-        {/* Spectrum dots */}
-        <div className="relative max-w-md mx-auto">
-          {plans.map((plan, i) => (
-            <button
-              key={i}
-              onClick={() => setActivePlan(i)}
-              className={`spectrum-dot ${activePlan === i ? "active" : ""}`}
-              style={{
-                left: `${i * 50}%`,
-                transform: activePlan === i ? "translate(-50%, -50%) scale(1.3)" : "translate(-50%, -50%)",
-                boxShadow: activePlan === i ? `0 0 20px ${plan.glowColor}` : "none",
-              }}
-              aria-label={`Select ${plan.name} plan`}
-            />
-          ))}
-        </div>
-
-        {/* Plan labels below track */}
-        <div className="flex justify-between max-w-md mx-auto mt-4">
-          {plans.map((plan, i) => (
-            <span
-              key={i}
-              className={`font-body text-xs font-medium transition-colors duration-300 ${
-                activePlan === i ? "text-deep-teal" : "text-shadow-blue/30"
-              }`}
-            >
-              {plan.name}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Active plan display */}
-      <div className="px-6 md:px-12 max-w-5xl mx-auto">
-        <div
-          className="pricing-card glass-card rounded-3xl overflow-hidden relative"
-          style={{
-            borderTop: `4px solid ${plans[activePlan].color}`,
-            boxShadow: `0 20px 60px ${plans[activePlan].glowColor}`,
-          }}
-        >
-          {/* Shimmer effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent bg-[length:200%_100%] animate-shimmer pointer-events-none" />
-
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            {/* Left: Plan details */}
-            <div className="p-8 md:p-12">
-              <div className="flex items-center gap-3 mb-4">
-                <h3 className="font-display font-700 text-shadow-blue text-3xl md:text-4xl">
-                  {plans[activePlan].name}
-                </h3>
-                {plans[activePlan].popular && (
-                  <span className="px-3 py-1 bg-soft-coral/10 text-soft-coral text-xs font-semibold rounded-full">
-                    Most Popular
-                  </span>
+        <div className="mt-12 grid gap-4 lg:grid-cols-3">
+          {PLANS.map((p, i) => (
+            <Reveal key={p.name} delay={i * 100} className="h-full">
+              <div
+                className={cn(
+                  'flex h-full flex-col rounded-[14px] border p-7 transition-all duration-200 hover:-translate-y-0.5',
+                  p.highlight
+                    ? 'border-deep-teal bg-white shadow-[0_20px_48px_-16px_rgba(13,79,79,0.25)]'
+                    : 'border-shadow-blue/10 bg-white hover:border-shadow-blue/20 hover:shadow-[0_12px_32px_-12px_rgba(26,46,53,0.18)]',
                 )}
-              </div>
-
-              <p className="font-body text-shadow-blue/50 text-sm mb-6">
-                {plans[activePlan].description}
-              </p>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className="font-display font-800 text-shadow-blue text-5xl md:text-6xl">
-                  {plans[activePlan].price}
-                </span>
-                {plans[activePlan].period && (
-                  <span className="font-body text-shadow-blue/40 text-lg">{plans[activePlan].period}</span>
-                )}
-              </div>
-
-              {/* Features */}
-              <ul className="space-y-3 mb-8">
-                {plans[activePlan].features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3 font-body text-shadow-blue/70 text-sm">
-                    <div className="w-5 h-5 rounded-full bg-deep-teal/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-deep-teal" strokeWidth={2.5} />
-                    </div>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <a
-                href="#demo"
-                className="group inline-flex items-center gap-2 px-8 py-4 bg-deep-teal text-sterile-white font-body font-semibold rounded-full hover:bg-deep-teal-light transition-all duration-300 shadow-lg shadow-deep-teal/20"
               >
-                Get Started Free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </div>
-
-            {/* Right: Visual preview */}
-            <div className="bg-shadow-blue/[0.03] p-8 md:p-12 flex flex-col justify-center">
-              <div className="space-y-4">
-                {/* Mock dashboard preview */}
-                <div className="glass-light rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-body text-shadow-blue/40 text-xs font-semibold tracking-wider uppercase">Todays Overview</span>
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="font-display font-700 text-shadow-blue text-2xl">12</div>
-                      <div className="font-body text-shadow-blue/40 text-xs mt-1">Appointments</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-display font-700 text-deep-teal text-2xl">$4.2K</div>
-                      <div className="font-body text-shadow-blue/40 text-xs mt-1">Revenue</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-display font-700 text-shadow-blue text-2xl">94%</div>
-                      <div className="font-body text-shadow-blue/40 text-xs mt-1">Fill Rate</div>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[17px] font-semibold tracking-tight text-shadow-blue">
+                    {p.name}
+                  </h3>
+                  {p.highlight && (
+                    <span className="rounded-full bg-deep-teal px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-sterile-white">
+                      Most chosen
+                    </span>
+                  )}
                 </div>
-
-                {/* Mini chart */}
-                <div className="glass-light rounded-2xl p-6">
-                  <span className="font-body text-shadow-blue/40 text-xs font-semibold tracking-wider uppercase">Weekly Revenue</span>
-                  <div className="flex items-end gap-2 mt-4 h-16">
-                    {[40, 65, 45, 80, 55, 90, 70].map((height, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 rounded-t-md bg-deep-teal/20 transition-all duration-500 hover:bg-deep-teal/40"
-                        style={{ height: `${height}%` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Upcoming */}
-                <div className="glass-light rounded-2xl p-6">
-                  <span className="font-body text-shadow-blue/40 text-xs font-semibold tracking-wider uppercase">Next Up</span>
-                  <div className="mt-3 space-y-2">
-                    {[
-                      { time: "9:00 AM", patient: "Sarah Thompson", type: "Checkup" },
-                      { time: "10:30 AM", patient: "James Lee", type: "Follow-up" },
-                      { time: "2:00 PM", patient: "Maria Garcia", type: "Consultation" },
-                    ].map((appt, i) => (
-                      <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-deep-teal/10 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-4 h-4 text-deep-teal" strokeWidth={1.5} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-body text-shadow-blue text-sm font-medium truncate">{appt.patient}</div>
-                          <div className="font-body text-shadow-blue/40 text-xs">{appt.type}</div>
-                        </div>
-                        <div className="font-body text-shadow-blue/40 text-xs">{appt.time}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <p className="mt-2 text-sm leading-relaxed text-shadow-blue-light">{p.blurb}</p>
+                <p className="mt-6">
+                  <span className="font-mono text-[36px] font-medium tracking-tight text-shadow-blue">
+                    {p.price}
+                  </span>
+                  {p.period && (
+                    <span className="ml-1 font-mono text-[12px] text-shadow-blue-light/70">
+                      {p.period}
+                    </span>
+                  )}
+                </p>
+                <ul className="mt-6 flex-1 space-y-2.5">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-shadow-blue-light">
+                      <Check className="mt-0.5 size-4 shrink-0 text-deep-teal" strokeWidth={2.5} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="#cta"
+                  className={cn(
+                    'mt-8 flex min-h-[48px] items-center justify-center rounded-full text-[15px] font-medium transition-colors',
+                    p.highlight
+                      ? 'bg-deep-teal text-sterile-white hover:bg-deep-teal-light'
+                      : 'border border-shadow-blue/15 text-shadow-blue hover:border-deep-teal/40 hover:text-deep-teal',
+                  )}
+                >
+                  {p.cta}
+                </a>
               </div>
-            </div>
-          </div>
+            </Reveal>
+          ))}
         </div>
-      </div>
 
-      {/* Bottom note */}
-      <div className="text-center mt-12 px-6">
-        <p className="font-body text-shadow-blue/30 text-sm">
-          All plans include a 14-day free trial. No credit card required.
-        </p>
+        <Reveal delay={200}>
+          <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-shadow-blue-light/60">
+            WhatsApp message costs passed through at Meta&quot;s rates · Cancel anytime
+          </p>
+        </Reveal>
       </div>
     </section>
-  );
+  )
 }

@@ -62,8 +62,8 @@ export const notificationStatusEnum = pgEnum('notification_status', [
 // subscriptions.plan — clinic → platform billing (Part 6/9)
 export const subscriptionPlanEnum = pgEnum('subscription_plan', [
   'starter',
-  'growth',
-  'multi_branch',
+  'professional',
+  'enterprise',
 ]);
 
 // subscriptions.billing_cycle
@@ -74,6 +74,7 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'trialing',
   'active',
   'past_due',
+  'paused',
   'canceled',
 ]);
 
