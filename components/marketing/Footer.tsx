@@ -27,7 +27,7 @@ export function Footer() {
             <Wordmark />
             <p className="mt-4 max-w-[32ch] text-sm leading-relaxed text-shadow-blue-light">
               The operating system small and mid-size clinics run their front desk on — so no
-              patient is forgotten and no doctor's day is a surprise.
+              patient is forgotten and no doctor&apos;s day is a surprise.
             </p>
             <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.12em] text-shadow-blue-light/50">
               Made for clinics, not hospitals

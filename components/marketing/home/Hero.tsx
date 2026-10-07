@@ -345,7 +345,7 @@ export function Hero() {
             <Reveal delay={160}>
               <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-shadow-blue-light">
                 ClinicSeva puts appointments, patient records and automatic WhatsApp reminders in
-                one calm place — so no patient is forgotten and no doctor's day is a surprise.
+                one calm place — so no patient is forgotten and no doctor&apos;s day is a surprise.
               </p>
             </Reveal>
 

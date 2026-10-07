@@ -885,11 +885,11 @@
 
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
-import ChaosLayer from "@/components/marketing/home/ChaosLayer";
-import Transformation from "@/components/marketing/home/Transformation";
-import Anatomy from "@/components/marketing/home/Anatomy";
-import HumanProof from "@/components/marketing/home/HumanProof";
-import SecurityVeil from "@/components/marketing/home/SecurityVeil";
+// import ChaosLayer from "@/components/marketing/home/ChaosLayer";
+// import Transformation from "@/components/marketing/home/Transformation";
+// import Anatomy from "@/components/marketing/home/Anatomy";
+// import HumanProof from "@/components/marketing/home/HumanProof";
+// import SecurityVeil from "@/components/marketing/home/SecurityVeil";
 import { Navbar } from "@/components/marketing/Navbar";
 import { Hero } from "@/components/marketing/home/Hero";
 import { HowItWorks } from "@/components/marketing/home/HowItWorks";
