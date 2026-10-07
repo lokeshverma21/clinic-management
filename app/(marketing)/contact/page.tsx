@@ -1,8 +1,9 @@
+import Contact from '@/components/marketing/contact/Contact'
 import React from 'react'
 
 function page() {
   return (
-    <div>page</div>
+    <div><Contact /></div>
   )
 }
 

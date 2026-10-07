@@ -4,7 +4,7 @@ const COLS = [
   {
     title: 'Product',
     links: ['Features', 'How it works', 'Pricing', 'FAQ'],
-    hrefs: ['#features', '#how-it-works', '#pricing', '#faq'],
+    hrefs: ['/features', '#how-it-works', '/pricing', '#faq'],
   },
   {
     title: 'For clinics',
@@ -14,7 +14,7 @@ const COLS = [
   {
     title: 'Company',
     links: ['About', 'Contact', 'Privacy', 'Terms'],
-    hrefs: ['#top', '#cta', '#top', '#top'],
+    hrefs: ['/about', '/contact', '/privacy', '/terms'],
   },
 ]
 

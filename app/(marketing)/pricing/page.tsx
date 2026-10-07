@@ -1,8 +1,9 @@
+import Pricing from '@/components/marketing/pricing/pricing'
 import React from 'react'
 
 function page() {
   return (
-    <div>page</div>
+    <div><Pricing /></div>
   )
 }
 

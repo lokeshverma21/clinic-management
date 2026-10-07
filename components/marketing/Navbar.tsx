@@ -7,9 +7,9 @@ import Link from 'next/link'
 
 const LINKS = [
   { label: 'Features', href: '/features' },
-  { label: 'How it works', href: '/how-it-works' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About Us', href: '/about' },
+  { label: 'Contact', href: '/contact' },
 ]
 
 export function Navbar() {
