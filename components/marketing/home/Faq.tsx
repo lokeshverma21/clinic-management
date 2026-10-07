@@ -51,7 +51,10 @@ export function Faq() {
             <Reveal delay={160}>
               <p className="mt-5 text-[15px] leading-relaxed text-shadow-blue-light">
                 Something else on your mind?{' '}
-                <a href="#cta" className="font-medium text-deep-teal underline decoration-deep-teal/30 underline-offset-4 hover:decoration-deep-teal">
+                <a
+                  href="#cta"
+                  className="font-medium text-deep-teal underline decoration-deep-teal/30 underline-offset-4 hover:decoration-deep-teal"
+                >
                   Write to us
                 </a>{' '}
                 — a human replies.
@@ -60,9 +63,13 @@ export function Faq() {
           </div>
 
           <Reveal delay={120}>
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion className="w-full">
               {FAQS.map((f, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className="border-shadow-blue/10">
+                <AccordionItem
+                  key={i}
+                  value={`faq-${i}`}
+                  className="border-shadow-blue/10"
+                >
                   <AccordionTrigger className="py-5 text-left text-[16px] font-medium tracking-tight text-shadow-blue hover:text-deep-teal hover:no-underline">
                     {f.q}
                   </AccordionTrigger>
