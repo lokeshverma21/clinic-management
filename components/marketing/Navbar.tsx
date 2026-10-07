@@ -1,3 +1,4 @@
+"use client"
 import { useEffect, useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -5,10 +6,10 @@ import { Wordmark } from './Logo'
 import Link from 'next/link'
 
 const LINKS = [
-  { label: 'Features', href: '#features' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'FAQ', href: '#faq' },
+  { label: 'Features', href: '/features' },
+  { label: 'How it works', href: '/how-it-works' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'About Us', href: '/about' },
 ]
 
 export function Navbar() {
@@ -34,7 +35,7 @@ export function Navbar() {
           )}
           aria-label="Main"
         >
-          <Link href="#top" className="flex items-center" aria-label="ClinicSeva home">
+          <Link href="/" className="flex items-center" aria-label="ClinicSeva home">
             <Wordmark />
           </Link>
 

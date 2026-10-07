@@ -930,7 +930,7 @@ export default function Home() {
 
   return (
     <main id="main-content" className="relative overflow-x-hidden">
-      <Navbar />
+      {/* <Navbar /> */}
       <Hero />
       <TrustBar/>
       <Features/>
@@ -946,7 +946,7 @@ export default function Home() {
       <HumanProof />
       <SecurityVeil /> */}
       {/* <Pricing /> */}
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }

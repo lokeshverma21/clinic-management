@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Inter_Tight, Crimson_Pro } from "next/font/google";
 import "../globals.css";
 import CustomCursor from "@/components/marketing/CustomCursor";
+import { Footer } from "@/components/marketing/Footer";
+import { Navbar } from "@/components/marketing/Navbar";
 
 // Satoshi replacement (Inter is the closest Google Font alternative)
 // For the exact Satoshi font, you'd need to host it locally or use a CDN
@@ -50,8 +52,10 @@ export default function RootLayout({
       lang="en" 
       className={`${satoshi.variable} ${interTight.variable} ${crimsonPro.variable} scroll-smooth`}
     >
+      <Navbar />
       <body className="antialiased bg-sterile-white text-shadow-blue overflow-x-hidden">
         {/* Skip to content link for accessibility */}
+        {/* <Navbar/> */}
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-deep-teal focus:text-white focus:rounded-full focus:text-sm focus:font-medium"
@@ -65,6 +69,7 @@ export default function RootLayout({
         <div className="hidden lg:block">
           <CustomCursor />
         </div>
+        <Footer/>
       </body>
     </html>
   );
