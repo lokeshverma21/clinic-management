@@ -192,7 +192,8 @@ export default function PricingPage() {
 
                   {/* CTA */}
                   <div className="mt-10">
-                    <button
+                    <a
+                      href={plan.name === 'Multi-Branch' ? "mailto:sales@clinicseva.com" : `/sign-up?plan=${plan.name.toLowerCase()}`}
                       className={cn(
                         "w-full h-12 rounded-full text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn",
                         plan.highlight
@@ -202,7 +203,7 @@ export default function PricingPage() {
                     >
                       {plan.cta}
                       <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                    </button>
+                    </a>
                   </div>
                 </div>
               </Reveal>

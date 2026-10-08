@@ -1,12 +1,90 @@
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { clinics, subscriptions, subscriptionWebhookEvents } from '@/db/schema';
-import type { NewSubscription, Subscription } from '@/db/schema';
+import type { Clinic, NewSubscription, Subscription } from '@/db/schema';
+import type { SubscriptionPatch } from './subscriptions.types';
 
-export async function getSubscription(clinicId: string): Promise<Subscription | null> { const [row] = await db.select().from(subscriptions).where(and(eq(subscriptions.clinicId, clinicId), isNull(subscriptions.deletedAt))).limit(1); return row ?? null; }
-export async function upsertSubscription(clinicId: string, patch: Omit<NewSubscription, 'clinicId'>): Promise<Subscription> { const current = await getSubscription(clinicId); if (current) { const [row] = await db.update(subscriptions).set({ ...patch, updatedAt: new Date() }).where(and(eq(subscriptions.clinicId, clinicId), isNull(subscriptions.deletedAt))).returning(); return row; } const [row] = await db.insert(subscriptions).values({ ...patch, clinicId }).returning(); return row; }
-export async function updateSubscription(clinicId: string, patch: Partial<Omit<NewSubscription, 'clinicId'>>): Promise<Subscription | null> { const [row] = await db.update(subscriptions).set({ ...patch, updatedAt: new Date() }).where(and(eq(subscriptions.clinicId, clinicId), isNull(subscriptions.deletedAt))).returning(); return row ?? null; }
-export async function getSubscriptionByCashfreeId(clinicId: string, cashfreeSubscriptionId: string): Promise<Subscription | null> { const [row] = await db.select().from(subscriptions).where(and(eq(subscriptions.clinicId, clinicId), eq(subscriptions.cashfreeSubscriptionId, cashfreeSubscriptionId), isNull(subscriptions.deletedAt))).limit(1); return row ?? null; }
-export async function updateClinicStatus(clinicId: string, status: 'active' | 'past_due' | 'suspended' | 'canceled'): Promise<void> { await db.update(clinics).set({ status, updatedAt: new Date() }).where(eq(clinics.id, clinicId)); }
-export async function insertWebhookEvent(clinicId: string, eventId: string, payload: object, status: string): Promise<boolean> { try { await db.insert(subscriptionWebhookEvents).values({ eventId, payload, status }); return true; } catch (error) { if (typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505') return false; throw error; } }
-export async function listWebhookEvents(clinicId: string) { return db.select({ eventId: subscriptionWebhookEvents.eventId, status: subscriptionWebhookEvents.status, processedAt: subscriptionWebhookEvents.processedAt }).from(subscriptionWebhookEvents).innerJoin(subscriptions, sql`${subscriptions.cashfreeSubscriptionId} = ${subscriptionWebhookEvents.payload}->>'subscription_id'`).where(and(eq(subscriptions.clinicId, clinicId), isNull(subscriptions.deletedAt))).orderBy(desc(subscriptionWebhookEvents.processedAt)); }
+export async function findByClinicId(clinicId: string): Promise<Subscription | null> {
+  const [row] = await db
+    .select()
+    .from(subscriptions)
+    .where(and(eq(subscriptions.clinicId, clinicId), isNull(subscriptions.deletedAt)))
+    .limit(1);
+  return row ?? null;
+}
+
+// System lookup (webhook / return page): the only caller that doesn't know clinicId yet.
+export async function findByCashfreeSubscriptionId(id: string): Promise<Subscription | null> {
+  const [row] = await db
+    .select()
+    .from(subscriptions)
+    .where(and(eq(subscriptions.cashfreeSubscriptionId, id), isNull(subscriptions.deletedAt)))
+    .limit(1);
+  return row ?? null;
+}
+
+// One subscription per clinic: insert the seed row, or just point the existing row at the new attempt.
+export async function upsertCheckoutAttempt(
+  clinicId: string,
+  cashfreeSubscriptionId: string,
+  seed: Omit<NewSubscription, 'clinicId' | 'cashfreeSubscriptionId'>,
+): Promise<Subscription> {
+  const [row] = await db
+    .insert(subscriptions)
+    .values({ ...seed, clinicId, cashfreeSubscriptionId })
+    .onConflictDoUpdate({
+      target: subscriptions.clinicId,
+      set: { cashfreeSubscriptionId, updatedAt: new Date() },
+    })
+    .returning();
+  if (!row) throw new Error('Failed to upsert subscription');
+  return row;
+}
+
+export async function applyGatewayState(
+  clinicId: string,
+  subscriptionId: string,
+  patch: SubscriptionPatch,
+  clinicStatus: Clinic['status'] | null,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(subscriptions)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(and(eq(subscriptions.clinicId, clinicId), eq(subscriptions.id, subscriptionId)));
+    if (clinicStatus) {
+      await tx
+        .update(clinics)
+        .set({ status: clinicStatus, updatedAt: new Date() })
+        .where(eq(clinics.id, clinicId));
+    }
+  });
+}
+
+export async function webhookEventExists(eventId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: subscriptionWebhookEvents.id })
+    .from(subscriptionWebhookEvents)
+    .where(eq(subscriptionWebhookEvents.eventId, eventId))
+    .limit(1);
+  return row !== undefined;
+}
+
+export async function recordWebhookEvent(eventId: string, payload: unknown, status: string): Promise<void> {
+  await db
+    .insert(subscriptionWebhookEvents)
+    .values({ eventId, payload, status })
+    .onConflictDoNothing({ target: subscriptionWebhookEvents.eventId });
+}
+
+export async function listWebhookEvents(limit = 10): Promise<Array<{ id: string; eventId: string; status: string; processedAt: Date }>> {
+  return db
+    .select({
+      id: subscriptionWebhookEvents.id,
+      eventId: subscriptionWebhookEvents.eventId,
+      status: subscriptionWebhookEvents.status,
+      processedAt: subscriptionWebhookEvents.processedAt,
+    })
+    .from(subscriptionWebhookEvents)
+    .limit(limit);
+}

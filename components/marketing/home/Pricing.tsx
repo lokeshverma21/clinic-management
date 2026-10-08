@@ -109,7 +109,7 @@ export function Pricing() {
                   ))}
                 </ul>
                 <a
-                  href="#cta"
+                  href={p.name === 'Multi-Branch' ? '#cta' : `/sign-up?plan=${p.name.toLowerCase()}`}
                   className={cn(
                     'mt-8 flex min-h-[48px] items-center justify-center rounded-full text-[15px] font-medium transition-colors',
                     p.highlight

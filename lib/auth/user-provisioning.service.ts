@@ -88,7 +88,7 @@ export async function handleUserCreated(data: ClerkUserEventData) {
       address: null,
       timezone: 'UTC',
       status: 'trial',
-      trialEndsAt: null,
+      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     },
   });
   return { status: 'clinic_created' as const, ...result };

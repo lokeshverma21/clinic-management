@@ -46,3 +46,9 @@ export class ConflictError extends AppError {
     super(code, message, 409);
   }
 }
+
+export class ValidationError extends AppError {
+  constructor(code: string, message: string) {
+    super(code, message, 422);
+  }
+}

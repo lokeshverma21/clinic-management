@@ -10,6 +10,7 @@ import { getClinicProfile } from "@/modules/clinic-profile";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { Show, UserButton } from "@clerk/nextjs";
+import Script from "next/script";
 
 export default async function DashboardLayout({
   children,
@@ -39,9 +40,13 @@ export default async function DashboardLayout({
     logoUrl: clinic.logoUrl,
     plan: clinic.status.toUpperCase(), // e.g., 'TRIAL', 'ACTIVE'
   }
-
+  
   return (
     <SidebarProvider>
+      <Script
+          src="https://sdk.cashfree.com/js/v3/cashfree.js"
+          strategy="afterInteractive"
+      />
       <AppSidebar user={sidebarUser} clinic={sidebarClinic} />
 
       <SidebarInset>

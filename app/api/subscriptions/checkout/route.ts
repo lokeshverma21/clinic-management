@@ -1,15 +1,15 @@
 import type { NextRequest } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
+import { subscriptionsService, startSubscriptionSchema } from '@/modules/subscriptions';
 import { getRequestContext } from '@/lib/auth/request-context';
 import { apiError, apiSuccess } from '@/lib/api/respond';
 import { BadRequestError } from '@/lib/errors/app-error';
-import { startSubscriptionSchema } from '@/modules/subscriptions/subscriptions.validation';
-import { startSubscription } from '@/modules/subscriptions/subscriptions.service';
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const ctx = await getRequestContext();
-    const input = startSubscriptionSchema.parse(await request.json());
+    const body: unknown = await req.json();
+    const { plan } = startSubscriptionSchema.parse(body);
 
     const user = await currentUser();
     const email = user?.primaryEmailAddress?.emailAddress;
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
       throw new BadRequestError('EMAIL_REQUIRED', 'Your account needs a primary email address to subscribe');
     }
 
-    return apiSuccess(await startSubscription(ctx.clinicId, ctx, input, email), 201);
+    const session = await subscriptionsService.startCheckout(ctx, plan, email);
+    return apiSuccess(session, 201);
   } catch (error) {
     return apiError(error);
   }

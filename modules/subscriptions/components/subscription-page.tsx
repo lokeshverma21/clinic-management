@@ -138,9 +138,11 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                 }),
             });
             const json = (await response.json()) as ApiResponse<{
-                sessionId: string;
+                sessionId?: string;
+                subscriptionSessionId?: string;
             }>;
-            if (!response.ok || !json.data)
+            const subsSessionId = json.data?.subscriptionSessionId ?? json.data?.sessionId;
+            if (!response.ok || !json.data || !subsSessionId)
                 throw new Error(
                     json.error?.message ?? "Could not start checkout",
                 );
@@ -156,7 +158,7 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                         ? "production"
                         : "sandbox",
             }).subscriptionsCheckout({
-                subsSessionId: json.data.sessionId,
+                subsSessionId,
                 redirectTarget: "_self",
             });
             if (result.error)

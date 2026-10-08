@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1783233700170,
-      "tag": "0000_polite_smiling_tiger",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1783615167617,
-      "tag": "0001_spotty_tyger_tiger",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1785144808903,
-      "tag": "0002_gigantic_hammerhead",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1786039835195,
-      "tag": "0003_wild_blacklash",
+      "when": 1791473044389,
+      "tag": "0000_careless_donald_blake",
       "breakpoints": true
     }
   ]
