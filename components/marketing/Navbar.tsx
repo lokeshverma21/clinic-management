@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
+import { useAuth } from '@clerk/nextjs'
 import { cn } from '@/lib/utils'
 import { Wordmark } from './Logo'
 import Link from 'next/link'
@@ -13,6 +14,7 @@ const LINKS = [
 ]
 
 export function Navbar() {
+  const { isSignedIn } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -53,19 +55,31 @@ export function Navbar() {
           </ul>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href="/sign-in"
-              className="rounded-full px-4 py-2 text-sm font-medium text-shadow-blue transition-colors hover:text-deep-teal"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/sign-up"
-              className="group flex min-h-[44px] items-center gap-1.5 rounded-full bg-deep-teal px-5 text-sm font-medium text-sterile-white transition-colors hover:bg-deep-teal-light"
-            >
-              Start free trial
-              <ArrowRight className="btn-arrow size-4" />
-            </Link>
+            {isSignedIn ? (
+              <Link
+                href="/dashboard"
+                className="group flex min-h-[44px] items-center gap-1.5 rounded-full bg-deep-teal px-5 text-sm font-medium text-sterile-white transition-colors hover:bg-deep-teal-light"
+              >
+                Dashboard
+                <ArrowRight className="btn-arrow size-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-shadow-blue transition-colors hover:text-deep-teal"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="group flex min-h-[44px] items-center gap-1.5 rounded-full bg-deep-teal px-5 text-sm font-medium text-sterile-white transition-colors hover:bg-deep-teal-light"
+                >
+                  Start free trial
+                  <ArrowRight className="btn-arrow size-4" />
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -98,14 +112,25 @@ export function Navbar() {
               </li>
             ))}
             <li className="mt-2 border-t border-shadow-blue/10 pt-3">
-              <Link
-                href="/sign-up"
-                onClick={() => setOpen(false)}
-                className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-full bg-deep-teal px-5 text-[15px] font-medium text-sterile-white"
-              >
-                Start free trial
-                <ArrowRight className="size-4" />
-              </Link>
+              {isSignedIn ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-full bg-deep-teal px-5 text-[15px] font-medium text-sterile-white"
+                >
+                  Dashboard
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : (
+                <Link
+                  href="/sign-up"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-full bg-deep-teal px-5 text-[15px] font-medium text-sterile-white"
+                >
+                  Start free trial
+                  <ArrowRight className="size-4" />
+                </Link>
+              )}
             </li>
           </ul>
         </div>
