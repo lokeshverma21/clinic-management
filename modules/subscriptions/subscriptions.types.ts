@@ -57,4 +57,4 @@ export interface SubscriptionDetailsPayload {
   trialEndsAt: Date | null;
 }
 
-export type ManageAction = 'pause' | 'cancel' | 'resume';
+export type ManageAction = 'pause' | 'cancel' | 'resume' | 'uncancel';

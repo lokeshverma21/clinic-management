@@ -207,12 +207,40 @@ export async function manageSubscription(
   }
 
   const now = new Date();
+  const isFullyEnded = existing.status === 'canceled' || (existing.cancelledAt !== null && existing.currentPeriodEnd <= now);
+  if (isFullyEnded) {
+    throw new BadRequestError('SUBSCRIPTION_EXPIRED', 'This subscription has already ended. Please choose a plan to start a new subscription.');
+  }
+
   if (action === 'pause') {
+    if (existing.status !== 'active') {
+      throw new BadRequestError('INVALID_STATE', 'Only active subscriptions can be paused');
+    }
     await repo.applyGatewayState(clinicId, existing.id, { status: 'paused', pausedAt: now }, null);
   } else if (action === 'cancel') {
-    await repo.applyGatewayState(clinicId, existing.id, { status: 'canceled', cancelledAt: now }, 'canceled');
-  } else if (action === 'resume') {
-    await repo.applyGatewayState(clinicId, existing.id, { status: 'active', pausedAt: null }, 'active');
+    // Schedule cancellation for the end of the billing period
+    await repo.applyGatewayState(
+      clinicId,
+      existing.id,
+      { cancelledAt: existing.cancelledAt ?? now },
+      null,
+    );
+  } else if (action === 'resume' || action === 'uncancel') {
+    if (existing.status === 'paused') {
+      await repo.applyGatewayState(
+        clinicId,
+        existing.id,
+        { status: 'active', pausedAt: null, cancelledAt: null },
+        'active',
+      );
+    } else if (existing.cancelledAt !== null) {
+      await repo.applyGatewayState(
+        clinicId,
+        existing.id,
+        { cancelledAt: null },
+        'active',
+      );
+    }
   }
 
   const updated = await repo.findByClinicId(clinicId);

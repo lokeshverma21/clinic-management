@@ -44,6 +44,7 @@ import type {
     Subscription,
     SubscriptionHistoryItem,
     SubscriptionPlanDetails,
+    ManageAction,
 } from "@/modules/subscriptions";
 
 interface CashfreeResult {
@@ -65,6 +66,7 @@ declare global {
 type Payload = {
     subscription: Subscription | null;
     history: SubscriptionHistoryItem[];
+    trialEndsAt?: string | Date | null;
 };
 type ApiResponse<T> = {
     success: boolean;
@@ -87,9 +89,10 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
     const [data, setData] = React.useState<Payload | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [busy, setBusy] = React.useState<
-        "starter" | "professional" | "pause" | "cancel" | null
+        "starter" | "professional" | "pause" | "cancel" | "resume" | "uncancel" | null
     >(null);
-    const [action, setAction] = React.useState<"pause" | "cancel" | null>(null);
+    const [confirmAction, setConfirmAction] = React.useState<"pause" | "cancel" | null>(null);
+
     const load = React.useCallback(async () => {
         try {
             setError(null);
@@ -122,9 +125,11 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
             );
         }
     }, []);
+
     React.useEffect(() => {
         void load();
     }, [load]);
+
     const start = async (plan: "starter" | "professional") => {
         try {
             setBusy(plan);
@@ -176,14 +181,15 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
             setBusy(null);
         }
     };
-    const manage = async () => {
-        if (!action) return;
+
+    const runManage = async (act: ManageAction) => {
         try {
-            setBusy(action);
+            setBusy(act);
+            setError(null);
             const response = await fetch("/api/subscriptions/manage", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ action }),
+                body: JSON.stringify({ action: act }),
             });
             const json = (await response.json()) as ApiResponse<unknown>;
             if (!response.ok)
@@ -199,13 +205,21 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
             );
         } finally {
             setBusy(null);
-            setAction(null);
+            setConfirmAction(null);
         }
     };
+
     if (!data && !error) return <SubscriptionLoading />;
     if (error && !data)
         return <SubscriptionError message={error} onRetry={load} />;
+
     const subscription = data?.subscription ?? null;
+    const isCancelledScheduled = Boolean(
+        subscription?.cancelledAt &&
+        subscription.currentPeriodEnd &&
+        new Date(subscription.currentPeriodEnd) > new Date()
+    );
+
     return (
         <>
             <Script
@@ -215,12 +229,13 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">
-                        Subscription
+                        Subscription & Billing
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Manage your ClinicOS plan and billing status.
+                        Manage your ClinicOS plan, trial status, and subscription actions.
                     </p>
                 </div>
+
                 {callback && (
                     <Alert className="border-primary/20 bg-primary/5">
                         <CheckCircle2 className="h-4 w-4" />
@@ -232,131 +247,200 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                         </AlertDescription>
                     </Alert>
                 )}
+
+                {isCancelledScheduled && (
+                    <Alert className="border-amber-500/20 bg-amber-500/5">
+                        <Clock3 className="h-4 w-4 text-amber-600" />
+                        <AlertTitle className="text-amber-800 dark:text-amber-400 font-semibold">
+                            Cancellation scheduled
+                        </AlertTitle>
+                        <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
+                            <span className="text-amber-900/90 dark:text-amber-300">
+                                Your plan is set to cancel on{" "}
+                                <strong>
+                                    {subscription?.currentPeriodEnd
+                                        ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")
+                                        : "end of period"}
+                                </strong>
+                                . You retain full clinic access until then.
+                            </span>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-amber-500/30 text-amber-900 hover:bg-amber-500/10 shrink-0"
+                                disabled={busy !== null}
+                                onClick={() => void runManage("uncancel")}
+                            >
+                                <RefreshCcw className="mr-2 h-3.5 w-3.5" />
+                                {busy === "uncancel" ? "Reactivating…" : "Undo cancellation"}
+                            </Button>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 {subscription && (
                     <Card className="border-border/60 shadow-none">
                         <CardHeader className="flex-row items-start justify-between">
                             <div>
-                                <CardTitle className="flex items-center gap-2">
+                                <CardTitle className="flex items-center gap-2 capitalize">
                                     <CreditCard className="h-5 w-5" />
-                                    {subscription.plan}
+                                    {subscription.plan} Plan
                                 </CardTitle>
                                 <CardDescription className="mt-1">
-                                    Renews{" "}
-                                    {subscription.currentPeriodEnd
-                                        .toString()
-                                        .slice(0, 10)}
+                                    {subscription.status === "trialing" && (
+                                        <>Trial ends {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}</>
+                                    )}
+                                    {subscription.status === "active" && !isCancelledScheduled && (
+                                        <>Renews {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}</>
+                                    )}
+                                    {subscription.status === "active" && isCancelledScheduled && (
+                                        <>Cancels on {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}</>
+                                    )}
+                                    {subscription.status === "paused" && (
+                                        <>Paused since {subscription.pausedAt ? new Date(subscription.pausedAt).toLocaleDateString("en-IN") : "recent"}</>
+                                    )}
+                                    {subscription.status === "canceled" && (
+                                        <>Cancelled on {subscription.cancelledAt ? new Date(subscription.cancelledAt).toLocaleDateString("en-IN") : "end of period"}</>
+                                    )}
                                 </CardDescription>
                             </div>
                             <Badge
                                 variant={
-                                    statusStyle[subscription.status] ??
-                                    "outline"
+                                    isCancelledScheduled
+                                        ? "outline"
+                                        : statusStyle[subscription.status] ?? "outline"
                                 }
+                                className={isCancelledScheduled ? "border-amber-500 text-amber-700 bg-amber-50" : ""}
                             >
-                                {subscription.status.replace("_", " ")}
+                                {isCancelledScheduled ? "Cancellation Scheduled" : subscription.status.replace("_", " ")}
                             </Badge>
                         </CardHeader>
-                        <CardContent className="flex flex-wrap gap-3">
-                            {subscription.status === "active" && (
+                        <CardContent className="flex flex-wrap gap-3 pt-2">
+                            {subscription.status === "paused" && (
                                 <Button
-                                    variant="outline"
-                                    onClick={() => setAction("pause")}
+                                    variant="default"
+                                    disabled={busy !== null}
+                                    onClick={() => void runManage("resume")}
                                 >
-                                    <Pause className="mr-2 h-4 w-4" />
-                                    Pause subscription
+                                    <RefreshCcw className="mr-2 h-4 w-4" />
+                                    {busy === "resume" ? "Resuming…" : "Resume subscription"}
                                 </Button>
                             )}
-                            {!["canceled", "paused"].includes(
-                                subscription.status,
-                            ) && (
+
+                            {subscription.status === "active" && !isCancelledScheduled && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        disabled={busy !== null}
+                                        onClick={() => setConfirmAction("pause")}
+                                    >
+                                        <Pause className="mr-2 h-4 w-4" />
+                                        Pause subscription
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="text-destructive hover:text-destructive"
+                                        disabled={busy !== null}
+                                        onClick={() => setConfirmAction("cancel")}
+                                    >
+                                        Cancel subscription
+                                    </Button>
+                                </>
+                            )}
+
+                            {isCancelledScheduled && (
                                 <Button
                                     variant="outline"
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={() => setAction("cancel")}
+                                    disabled={busy !== null}
+                                    onClick={() => void runManage("uncancel")}
                                 >
-                                    Cancel subscription
+                                    <RefreshCcw className="mr-2 h-4 w-4" />
+                                    {busy === "uncancel" ? "Reactivating…" : "Reactivate subscription"}
                                 </Button>
                             )}
                         </CardContent>
                     </Card>
                 )}
+
                 {subscription?.status === "past_due" && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Payment needs attention</AlertTitle>
                         <AlertDescription>
-                            Your clinic may become read-only if payment is not
-                            resumed.
+                            Your clinic account may become restricted if payment is not completed.
                         </AlertDescription>
                     </Alert>
                 )}
+
                 <div>
-                    <h2 className="text-lg font-semibold">Choose a plan</h2>
+                    <h2 className="text-lg font-semibold">Available Plans</h2>
                     <div className="mt-4 grid gap-4 md:grid-cols-3">
-                        {plans.map((plan) => (
-                            <Card
-                                key={plan.id}
-                                className={
-                                    subscription?.plan === plan.id
-                                        ? "border-primary shadow-sm"
-                                        : "border-border/60 shadow-none"
-                                }
-                            >
-                                <CardHeader>
-                                    <CardTitle className="flex items-center justify-between">
-                                        {plan.name}
-                                        {subscription?.plan === plan.id && (
-                                            <Badge>Current</Badge>
+                        {plans.map((plan) => {
+                            const isCurrent =
+                                subscription?.plan === plan.id &&
+                                subscription.status !== "canceled";
+                            return (
+                                <Card
+                                    key={plan.id}
+                                    className={
+                                        isCurrent
+                                            ? "border-primary shadow-sm"
+                                            : "border-border/60 shadow-none"
+                                    }
+                                >
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center justify-between">
+                                            {plan.name}
+                                            {isCurrent && <Badge>Current</Badge>}
+                                        </CardTitle>
+                                        <CardDescription>
+                                            {plan.amount === null
+                                                ? "Custom pricing"
+                                                : `₹${plan.amount.toLocaleString("en-IN")} / month`}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {plan.staffSeatLimit && (
+                                            <p className="mb-4 text-sm text-muted-foreground">
+                                                Up to {plan.staffSeatLimit} staff seats
+                                            </p>
                                         )}
-                                    </CardTitle>
-                                    <CardDescription>
-                                        {plan.amount === null
-                                            ? "Custom pricing"
-                                            : `₹${plan.amount.toLocaleString("en-IN")} / month`}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {plan.staffSeatLimit && (
-                                        <p className="mb-4 text-sm text-muted-foreground">
-                                            Up to {plan.staffSeatLimit} staff
-                                            seats
-                                        </p>
-                                    )}
-                                    {plan.selfServe ? (
-                                        <Button
-                                            className="w-full"
-                                            disabled={
-                                                busy !== null ||
-                                                subscription?.plan === plan.id
-                                            }
-                                            onClick={() =>
-                                                void start(
-                                                    plan.id as
-                                                        | "starter"
-                                                        | "professional",
-                                                )
-                                            }
-                                        >
-                                            {busy === plan.id
-                                                ? "Opening checkout…"
-                                                : subscription?.plan === plan.id
-                                                  ? "Current plan"
-                                                  : "Choose plan"}
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            className="w-full"
-                                            variant="outline"
-                                            disabled
-                                        >
-                                            Contact sales
-                                        </Button>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        ))}
+                                        {plan.selfServe ? (
+                                            <Button
+                                                className="w-full"
+                                                disabled={
+                                                    busy !== null || isCurrent
+                                                }
+                                                onClick={() =>
+                                                    void start(
+                                                        plan.id as
+                                                            | "starter"
+                                                            | "professional",
+                                                    )
+                                                }
+                                            >
+                                                {busy === plan.id
+                                                    ? "Opening checkout…"
+                                                    : isCurrent
+                                                      ? "Current plan"
+                                                      : "Choose plan"}
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                className="w-full"
+                                                variant="outline"
+                                                disabled
+                                            >
+                                                Contact sales
+                                            </Button>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
                     </div>
                 </div>
+
                 <div>
                     <h2 className="text-lg font-semibold">Billing history</h2>
                     <Card className="mt-4 border-border/60 shadow-none">
@@ -402,27 +486,28 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                     </Card>
                 </div>
             </div>
+
             <AlertDialog
-                open={action !== null}
-                onOpenChange={(open) => !open && setAction(null)}
+                open={confirmAction !== null}
+                onOpenChange={(open) => !open && setConfirmAction(null)}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            {action === "cancel"
-                                ? "Cancel subscription?"
+                            {confirmAction === "cancel"
+                                ? "Schedule cancellation?"
                                 : "Pause subscription?"}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {action === "cancel"
-                                ? "This ends recurring billing. You can continue until the current period ends."
+                            {confirmAction === "cancel"
+                                ? "Your subscription will remain active until the end of your current billing period. You can undo cancellation anytime before then."
                                 : "Recurring billing will pause until you resume your plan."}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Keep subscription</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={() => void manage()}
+                            onClick={() => confirmAction && void runManage(confirmAction)}
                             disabled={busy !== null}
                         >
                             {busy ? "Saving…" : "Confirm"}
@@ -433,6 +518,7 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
         </>
     );
 }
+
 function SubscriptionLoading() {
     return (
         <div className="space-y-6">
@@ -446,6 +532,7 @@ function SubscriptionLoading() {
         </div>
     );
 }
+
 function SubscriptionError({
     message,
     onRetry,

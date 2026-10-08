@@ -51,7 +51,7 @@ export default async function SubscriptionReturnPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild>
+            <Button>
               <Link href="/settings/subscription">Return to Subscription Settings</Link>
             </Button>
           </CardContent>
@@ -84,7 +84,7 @@ export default async function SubscriptionReturnPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          <Button asChild className="w-full">
+          <Button className="w-full">
             <Link href="/settings/subscription">Go to Subscription Settings</Link>
           </Button>
         </CardContent>

@@ -10,5 +10,5 @@ export const returnQuerySchema = z.object({
 });
 
 export const manageSubscriptionSchema = z.object({
-  action: z.enum(['pause', 'cancel', 'resume']),
+  action: z.enum(['pause', 'cancel', 'resume', 'uncancel']),
 });

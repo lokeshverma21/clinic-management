@@ -34,7 +34,18 @@ export async function upsertCheckoutAttempt(
     .values({ ...seed, clinicId, cashfreeSubscriptionId })
     .onConflictDoUpdate({
       target: subscriptions.clinicId,
-      set: { cashfreeSubscriptionId, updatedAt: new Date() },
+      set: {
+        plan: seed.plan,
+        staffSeatLimit: seed.staffSeatLimit,
+        billingCycle: seed.billingCycle,
+        currentPeriodStart: seed.currentPeriodStart,
+        currentPeriodEnd: seed.currentPeriodEnd,
+        status: seed.status,
+        cashfreeSubscriptionId,
+        cancelledAt: null,
+        pausedAt: null,
+        updatedAt: new Date(),
+      },
     })
     .returning();
   if (!row) throw new Error('Failed to upsert subscription');
