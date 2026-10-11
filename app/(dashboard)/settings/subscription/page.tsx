@@ -1,8 +1,8 @@
 import { SubscriptionPage } from "@/modules/subscriptions/components/subscription-page";
 
 export const metadata = {
-  title: "Subscription Settings | ClinicOS",
-  description: "Manage your ClinicOS subscription and billing details.",
+  title: "Subscription Settings | ClinicSeva",
+  description: "Manage your ClinicSeva subscription and billing details.",
 };
 
 export default function SubscriptionSettingsPage() {

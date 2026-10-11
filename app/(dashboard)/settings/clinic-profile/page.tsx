@@ -3,7 +3,7 @@ import { ClinicProfileHeader } from "@/modules/clinic-profile/components/clinic-
 import { ClinicProfileForm } from "@/modules/clinic-profile/components/clinic-profile-form"
 
 export const metadata = {
-  title: "Clinic Profile | ClinicOS Settings",
+  title: "Clinic Profile | ClinicSeva Settings",
   description: "Manage your clinic information and operating hours.",
 };
 

@@ -232,7 +232,7 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                         Subscription & Billing
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Manage your ClinicOS plan, trial status, and subscription actions.
+                        Manage your ClinicSeva plan, trial status, and subscription actions.
                     </p>
                 </div>
 

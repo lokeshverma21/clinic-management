@@ -63,7 +63,7 @@ export default async function DashboardLayout({
             />
 
             {/* Later you can add breadcrumbs, search, profile, etc. */}
-            <h1 className="font-medium">ClinicOS</h1>
+            <h1 className="font-medium">ClinicSeva</h1>
           </div>
           <div className="flex items-center gap-3">
             <AutoEmailRemindersToggle

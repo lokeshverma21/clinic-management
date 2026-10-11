@@ -41,7 +41,7 @@ const data = {
   },
   teams: [
     {
-      name: "ClinicOS",
+      name: "ClinicSeva",
       logo: (
         <Dna strokeWidth={2} />
       ),

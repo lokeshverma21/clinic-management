@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { getRequestContext } from "@/lib/auth/request-context";
 
 export const metadata = {
-  title: "Set up your clinic | ClinicOS",
-  description: "Complete your clinic profile to start using ClinicOS.",
+  title: "Set up your clinic | ClinicSeva",
+  description: "Complete your clinic profile to start using ClinicSeva.",
 };
 
 export default async function OnboardingClinicPage() {
@@ -23,7 +23,7 @@ export default async function OnboardingClinicPage() {
     <div className="container max-w-4xl py-2 mx-auto">
       <ClinicProfileHeader 
         title="Let's set up your clinic" 
-        subtitle="Complete your clinic profile to start using ClinicOS." 
+        subtitle="Complete your clinic profile to start using ClinicSeva." 
       />
       <ClinicProfileForm mode="onboarding" />
     </div>
