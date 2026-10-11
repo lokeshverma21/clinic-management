@@ -1,3 +1,4 @@
+// api/cron/process-notifications/route.ts
 import { NextResponse } from 'next/server';
 import { processDueNotifications } from '@/modules/notifications';
 
