@@ -115,12 +115,12 @@ export function AppointmentTable({
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[100px] py-4">Time</TableHead>
+            <TableHead className="w-25 py-4">Time</TableHead>
             <TableHead className="py-4">Patient</TableHead>
             <TableHead className="py-4">Doctor</TableHead>
             <TableHead className="py-4">Status</TableHead>
             <TableHead className="py-4 hidden lg:table-cell">Notes</TableHead>
-            <TableHead className="w-[80px] text-right py-4"></TableHead>
+            <TableHead className="w-20 text-right py-4"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

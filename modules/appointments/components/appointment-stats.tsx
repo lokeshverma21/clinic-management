@@ -16,18 +16,24 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: LucideIcon;
+  iconClass: string;
   trend?: {
     value: number;
     isUp: boolean;
   };
 }
 
-function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
+function StatCard({ title, value, icon: Icon, iconClass, trend }: StatCardProps) {
   return (
     <Card className="shadow-none border-border/60 bg-card/50">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-md bg-background border border-border/50 text-muted-foreground flex items-center justify-center">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1",
+              iconClass
+            )}
+          >
             <Icon size={18} strokeWidth={2} />
           </div>
           <div className="flex-1 min-w-0">
@@ -66,21 +72,25 @@ export function AppointmentStats({ appointments }: AppointmentStatsProps) {
         title="Schedule Appointments" 
         value={total} 
         icon={Calendar} 
+        iconClass="bg-teal-50 text-teal-700 ring-teal-100"
       />
       <StatCard 
         title="Confirmed" 
         value={confirmed} 
         icon={CheckCircle2} 
+        iconClass="bg-sky-50 text-sky-700 ring-sky-100"
       />
       <StatCard 
         title="Completed" 
         value={completed} 
         icon={Clock} 
+        iconClass="bg-emerald-50 text-emerald-700 ring-emerald-100"
       />
       <StatCard 
         title="Cancelled" 
         value={cancelled} 
         icon={XCircle} 
+        iconClass="bg-rose-50 text-rose-700 ring-rose-100"
       />
     </div>
   )

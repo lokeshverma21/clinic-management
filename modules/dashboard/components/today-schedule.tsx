@@ -47,10 +47,10 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
  * the browser renders in the user's local timezone.
  */
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-GB', {
+  return new Date(iso).toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    hour12: true,
   });
 }
 
@@ -72,31 +72,31 @@ export function TodaySchedule({ appointments }: TodayScheduleProps) {
           </p>
         ) : (
           <ScrollArea className="h-[360px]">
-            <Table>
+            <Table className='px-6'>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[90px]">Time</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Doctor</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="w-[90px] px-4">Time</TableHead>
+                  <TableHead className='px-4'>Patient</TableHead>
+                  <TableHead className='px-4'>Doctor</TableHead>
+                  <TableHead className='px-4'>Duration</TableHead>
+                  <TableHead className="text-right px-4">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {appointments.map((appt) => (
                   <TableRow key={appt.id}>
                     {/* startTime displayed, endTime available for tooltip if needed */}
-                    <TableCell className="font-mono text-sm tabular-nums">
+                    <TableCell className="font-mono text-sm tabular-nums px-4">
                       {formatTime(appt.startTime)}
                     </TableCell>
-                    <TableCell className="font-medium">{appt.patientName}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="font-medium px-4">{appt.patientName}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm px-4">
                       {appt.doctorName}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm tabular-nums">
+                    <TableCell className="text-muted-foreground text-sm tabular-nums px-4">
                       {appt.durationMinutes} min
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right px-4">
                       <Badge variant={STATUS_VARIANT[appt.status]}>
                         {STATUS_LABEL[appt.status]}
                       </Badge>
