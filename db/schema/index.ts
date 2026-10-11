@@ -10,6 +10,7 @@ export * from './subscriptionWebhookEvents';
 export * from './patients';
 export * from './appointments';
 export * from './notifications';
+export * from './clinicNotificationSettings';
 export * from './invoices';
 export * from './invoiceItems';
 export * from './auditLogs';

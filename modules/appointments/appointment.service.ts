@@ -3,6 +3,11 @@ import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '@
 import type { RequestContext } from '@/lib/auth/request-context';
 import { getPatient } from '@/modules/patients';
 import * as appointmentRepository from './appointment.repository';
+import {
+  handleAppointmentCreated,
+  handleAppointmentUpdated,
+  handleAppointmentCanceled,
+} from '@/modules/notifications';
 import { SlotConflictDbError } from './appointment.repository';
 import type {
   Appointment,
@@ -89,9 +94,14 @@ export async function createAppointment(
       createdByMembershipId: ctx.membershipId,
     });
 
-    // TODO(notifications module, Part 9/10): schedule confirmation +
-    // 24h/1h reminder jobs here once Notifications exists. Booking isn't
-    // "done" per the blueprint until this hook is wired up.
+    try {
+      await handleAppointmentCreated(appointment);
+    } catch (error) {
+      console.error('Appointment notification hook failed after create', {
+        appointmentId: appointment.id,
+        error,
+      });
+    }
 
     return appointment;
   } catch (error) {
@@ -145,8 +155,14 @@ export async function updateAppointment(
     });
     if (!appointment) throw new NotFoundError('APPOINTMENT_NOT_FOUND', 'Appointment not found');
 
-    // TODO(notifications module, Part 9): if the time changed, cancel the
-    // old reminder jobs and schedule new ones against the updated time.
+    try {
+      await handleAppointmentUpdated(existing, appointment);
+    } catch (error) {
+      console.error('Appointment notification hook failed after update', {
+        appointmentId: appointment.id,
+        error,
+      });
+    }
 
     return appointment;
   } catch (error) {
@@ -180,9 +196,14 @@ export async function cancelAppointment(ctx: RequestContext, appointmentId: stri
   });
   if (!appointment) throw new NotFoundError('APPOINTMENT_NOT_FOUND', 'Appointment not found');
 
-  // TODO(notifications module, Part 9): cancel this appointment's
-  // pending notification jobs — a patient shouldn't get a reminder for a
-  // canceled appointment.
+  try {
+    await handleAppointmentCanceled(appointment);
+  } catch (error) {
+    console.error('Appointment notification hook failed after cancel', {
+      appointmentId: appointment.id,
+      error,
+    });
+  }
 
   return appointment;
 }

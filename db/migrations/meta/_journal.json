@@ -8,6 +8,20 @@
       "when": 1791473044389,
       "tag": "0000_careless_donald_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760174400000,
+      "tag": "0001_clinic_notification_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791701462327,
+      "tag": "0002_blushing_screwball",
+      "breakpoints": true
     }
   ]
 }

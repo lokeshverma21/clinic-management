@@ -7,6 +7,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { getRequestContext } from "@/lib/auth/request-context";
 import { getClinicProfile } from "@/modules/clinic-profile";
+import { getNotificationSettings } from "@/modules/notifications";
+import { AutoEmailRemindersToggle } from "@/modules/notifications/components/auto-email-reminders-toggle";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { Show, UserButton } from "@clerk/nextjs";
@@ -24,6 +26,7 @@ export default async function DashboardLayout({
   const ctx = await getRequestContext();
 
   const clinic = await getClinicProfile(ctx);
+  const notificationSettings = await getNotificationSettings(ctx);
 
   if (!clinic.onboardingCompletedAt) {
       redirect("/onboarding/clinic");
@@ -62,9 +65,15 @@ export default async function DashboardLayout({
             {/* Later you can add breadcrumbs, search, profile, etc. */}
             <h1 className="font-medium">ClinicOS</h1>
           </div>
-          <Show when="signed-in">
+          <div className="flex items-center gap-3">
+            <AutoEmailRemindersToggle
+              initialEnabled={notificationSettings.autoEmailRemindersEnabled}
+              canEdit={ctx.role === "owner"}
+            />
+            <Show when="signed-in">
               <UserButton />
-          </Show>
+            </Show>
+          </div>
         </header>
 
         <main className="flex-1 p-6">

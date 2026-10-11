@@ -7,6 +7,7 @@ import { subscriptions } from './subscriptions';
 import { patients } from './patients';
 import { appointments } from './appointments';
 import { notifications } from './notifications';
+import { clinicNotificationSettings } from './clinicNotificationSettings';
 import { invoices } from './invoices';
 import { invoiceItems } from './invoiceItems';
 import { auditLogs } from './auditLogs';
@@ -23,6 +24,10 @@ export const clinicsRelations = relations(clinics, ({ many, one }) => ({
   subscription: one(subscriptions, {
     fields: [clinics.id],
     references: [subscriptions.clinicId],
+  }),
+  notificationSettings: one(clinicNotificationSettings, {
+    fields: [clinics.id],
+    references: [clinicNotificationSettings.clinicId],
   }),
 }));
 

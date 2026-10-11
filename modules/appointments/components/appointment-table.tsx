@@ -6,7 +6,9 @@ import {
   Eye, 
   Pencil, 
   XCircle, 
-  CheckCircle2 
+  CheckCircle2,
+  Mail,
+  Loader2,
 } from "lucide-react"
 import {
   Table,
@@ -42,6 +44,31 @@ export function AppointmentTable({
   onEdit, 
   onRefresh 
 }: AppointmentTableProps) {
+  const [sendingEmailId, setSendingEmailId] = React.useState<string | null>(null)
+
+  const handleSendConfirmationEmail = async (appointment: AppointmentWithDetails) => {
+    if (!appointment.patient.email) {
+      alert("This patient does not have an email address on file.")
+      return
+    }
+
+    try {
+      setSendingEmailId(appointment.id)
+      const res = await fetch(`/api/appointments/${appointment.id}/send-confirmation-email`, {
+        method: "POST",
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error?.message ?? "Failed to send confirmation email")
+      }
+      alert("Confirmation email sent successfully.")
+    } catch (err) {
+      console.error(err)
+      alert(err instanceof Error ? err.message : "Error sending confirmation email")
+    } finally {
+      setSendingEmailId(null)
+    }
+  }
 
   const handleUpdateStatus = async (id: string, status: "completed") => {
     try {
@@ -144,6 +171,18 @@ export function AppointmentTable({
                       <DropdownMenuItem className="gap-2" onClick={() => onViewDetails(apt)}>
                          <Eye size={16} className="text-muted-foreground" />
                          View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="gap-2"
+                        disabled={sendingEmailId === apt.id || !apt.patient.email}
+                        onClick={() => handleSendConfirmationEmail(apt)}
+                      >
+                        {sendingEmailId === apt.id ? (
+                          <Loader2 size={16} className="animate-spin text-muted-foreground" />
+                        ) : (
+                          <Mail size={16} className="text-muted-foreground" />
+                        )}
+                        Send Confirmation Email
                       </DropdownMenuItem>
                       {!isCompletedOrCanceled && (
                         <>
