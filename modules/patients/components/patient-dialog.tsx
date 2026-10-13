@@ -178,171 +178,234 @@ export function PatientDialog({
     }
   }
 
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] border-border/60 shadow-lg p-0 overflow-hidden rounded-xl">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent
+        className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden rounded-xl border-border/60 p-0 shadow-lg sm:max-w-[500px]"
+      >
+        <DialogHeader className="shrink-0 border-b border-border/50 p-6 pb-4">
           <DialogTitle className="text-xl">
-            {mode === 'add' ? 'Add Patient' : 'Edit Patient'}
+            {mode === "add" ? "Add Patient" : "Edit Patient"}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'add' 
-              ? 'Create a new patient record in the system.' 
-              : 'Modify existing patient information.'}
+            {mode === "add"
+              ? "Create a new patient record in the system."
+              : "Modify existing patient information."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <ScrollArea className="max-h-[70vh]">
-            <div className="grid gap-6 p-6 pt-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
+          {/* Scrollable form content */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="grid gap-6 p-6">
               {error && (
-                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg font-medium">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive">
                   {error}
                 </div>
               )}
 
               {showDuplicateWarning && (
-                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-800 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+                <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+
                   <div className="text-xs leading-relaxed">
-                    <p className="font-semibold mb-1">Potential Duplicate</p>
-                    <p className="mb-2">This phone number already exists for another patient. Shared household numbers are allowed.</p>
-                    <Button 
-                      type="submit" 
-                      size="sm" 
-                      className="bg-amber-600 hover:bg-amber-700 text-white text-[10px] h-6 px-3"
+                    <p className="mb-1 font-semibold">
+                      Potential Duplicate
+                    </p>
+                    <p className="mb-2">
+                      This phone number already exists for another patient.
+                      Shared household numbers are allowed.
+                    </p>
+
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-7 bg-amber-600 px-3 text-xs text-white hover:bg-amber-700"
+                      disabled={isSubmitting}
                     >
-                      Confirm & Save Anyway
+                      Confirm &amp; Save Anyway
                     </Button>
                   </div>
                 </div>
               )}
 
               <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Full Name</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label
+                    htmlFor="fullName"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Full Name
+                  </Label>
+
                   <div className="relative">
-                    <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="fullName" 
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="fullName"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Sarah Connor" 
-                      className="pl-9 h-10 bg-background text-sm" 
-                      required 
+                      placeholder="e.g. Sarah Connor"
+                      className="h-10 bg-background pl-9 text-sm"
+                      required
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
+                    <Label
+                      htmlFor="phone"
+                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Phone Number
+                    </Label>
+
                     <div className="relative">
-                      <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="phone" 
+                      <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="e.g. +14155552671" 
-                        className="pl-9 h-10 bg-background text-sm" 
-                        required 
+                        placeholder="e.g. +14155552671"
+                        className="h-10 bg-background pl-9 text-sm"
+                        required
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email (Optional)</Label>
+
+                  <div className="min-w-0 space-y-2">
+                    <Label
+                      htmlFor="email"
+                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Email (Optional)
+                    </Label>
+
                     <div className="relative">
-                      <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="email" 
-                        type="email" 
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. sarah.c@sky.net" 
-                        className="pl-9 h-10 bg-background text-sm" 
+                        placeholder="e.g. sarah.c@sky.net"
+                        className="h-10 bg-background pl-9 text-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dob" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date of Birth</Label>
-                    <div className="relative">
-                      <Popover>
-                        <PopoverTrigger
-                          render={
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal h-10 bg-background text-sm pl-9",
-                                !date && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                              {date ? format(date, "PPP") : <span>Pick a date</span>}
-                            </Button>
-                          }
-                        />
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                      <div className="space-y-2">
+                      <Label htmlFor="dob" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date of Birth</Label>
+                      <div className="relative">
+                        <Popover>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal h-10 bg-background text-sm pl-9",
+                                  !date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                {date ? format(date, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                            }
                           />
-                        </PopoverContent>
-                      </Popover>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={date}
+                              onSelect={setDate}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gender</Label>
-                    <Select value={gender} onValueChange={(val) => setGender(val ?? "undisclosed")}>
-                      <SelectTrigger id="gender" className="h-10 bg-background text-sm">
+
+                  <div className="min-w-0 space-y-2">
+                    <Label
+                      htmlFor="gender"
+                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Gender
+                    </Label>
+
+                    <Select
+                      value={gender}
+                      onValueChange={(val) =>
+                        setGender(val ?? "undisclosed")
+                      }
+                    >
+                      <SelectTrigger
+                        id="gender"
+                        className="h-10 bg-background text-sm"
+                      >
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="male">Male</SelectItem>
                         <SelectItem value="female">Female</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="undisclosed">Undisclosed</SelectItem>
+                        <SelectItem value="undisclosed">
+                          Undisclosed
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (Optional)</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label
+                    htmlFor="notes"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Notes (Optional)
+                  </Label>
+
                   <div className="relative">
-                    <FileText className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Textarea 
-                      id="notes" 
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Textarea
+                      id="notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Medical history, allergies, etc." 
-                      className="pl-9 min-h-[100px] bg-background resize-none py-2.5 text-sm" 
+                      placeholder="Medical history, allergies, etc."
+                      className="min-h-[100px] resize-y bg-background py-2.5 pl-9 text-sm"
                     />
                   </div>
                 </div>
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
-          <DialogFooter className="bg-muted/30 p-6 pt-4 mt-0 border-t border-border/50">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)} 
+          {/* Fixed footer: always accessible */}
+          <DialogFooter className="shrink-0 border-t border-border/50 bg-muted/30 p-4 sm:p-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
               className="h-10 px-6"
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              className="h-10 px-6 bg-primary" 
+
+            <Button
+              type="submit"
+              className="h-10 px-6"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Processing...' : (mode === 'add' ? 'Create Patient' : 'Save Changes')}
+              {isSubmitting
+                ? "Processing..."
+                : mode === "add"
+                  ? "Create Patient"
+                  : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

@@ -228,7 +228,7 @@ export function AppointmentDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] border-border/60 shadow-lg p-0 overflow-hidden rounded-xl">
+        <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden rounded-xl border-border/60 p-0 shadow-lg sm:max-w-[500px]">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="text-xl">
               {mode === "edit" ? "Edit Appointment" : "Book Appointment"}
@@ -238,7 +238,7 @@ export function AppointmentDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 min-h-0 max-h-[70vh]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className="grid gap-6 p-6">
               {(submitError || dataError) && (
                 <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg font-medium">
@@ -255,9 +255,17 @@ export function AppointmentDialog({
                       onValueChange={(val) => setField("patientId", val ?? "")}
                       disabled={mode === "edit"}
                     >
-                      <SelectTrigger className="h-10 bg-background flex-1 text-sm">
-                        <SelectValue placeholder={isLoadingData ? "Loading..." : "Select patient"} />
-                      </SelectTrigger>
+<SelectTrigger className="h-10 min-w-0 flex-1 bg-background text-sm">
+  <span className="truncate text-left">
+    {isLoadingData
+      ? "Loading patients..."
+      : patients.find((p) => p.id === form.patientId)
+          ? `${patients.find((p) => p.id === form.patientId)!.fullName} (${patients.find((p) => p.id === form.patientId)!.phone})`
+          : form.patientId
+            ? "Selected patient"
+            : "Select patient"}
+  </span>
+</SelectTrigger>
                       <SelectContent>
                         {patients.map((p) => (
                           <SelectItem key={p.id} value={p.id} label={`${p.fullName} (${p.phone})`}>
@@ -286,10 +294,26 @@ export function AppointmentDialog({
                     onValueChange={(val) => setField("doctorMembershipId", val ?? "")}
                     disabled={mode === "edit"}
                   >
-                    <SelectTrigger className="h-10 bg-background text-sm">
-                      <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder={isLoadingData ? "Loading..." : "Select doctor"} />
-                    </SelectTrigger>
+<SelectTrigger className="h-10 min-w-0 bg-background text-sm">
+  <User className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+  <span className="truncate text-left">
+    {isLoadingData
+      ? "Loading doctors..."
+      : doctors.find(
+          (doc) => doc.membershipId === form.doctorMembershipId
+        )
+        ? (() => {
+            const doctor = doctors.find(
+              (doc) => doc.membershipId === form.doctorMembershipId
+            )!
+
+            return doctor.user?.fullName ?? doctor.invitedEmail
+          })()
+        : form.doctorMembershipId
+          ? "Selected doctor"
+          : "Select doctor"}
+  </span>
+</SelectTrigger>
                     <SelectContent>
                       {doctors.map((doc) => (
                         <SelectItem key={doc.membershipId} value={doc.membershipId}>
@@ -368,7 +392,7 @@ export function AppointmentDialog({
                 </div>
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
           <DialogFooter className="bg-muted/30 p-6 pt-4 mt-0 border-t border-border/50">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10 px-6">
