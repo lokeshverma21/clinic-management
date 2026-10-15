@@ -11,18 +11,18 @@ import type { AppointmentWhatsAppContext } from '../../../notification.types';
 export function buildWhatsAppReminderMessage(
   ctx: AppointmentWhatsAppContext,
 ): string {
-  const clinicLabel = ctx.clinicName ?? 'the clinic';
+  const clinicLabel = ctx.clinicName ?? 'clinic';
   const when = ctx.clinicTimezone
     ? formatAppointmentDateTime(ctx.startTime, ctx.clinicTimezone)
     : ctx.startTime.toLocaleString();
 
   return [
-    `Hi ${ctx.patientName} 👋`,
+    `Hi ${ctx.patientName}`,
     '',
     `This is a friendly reminder about your upcoming appointment at *${clinicLabel}*.`,
     '',
-    `📅 *When:* ${when}`,
-    `👨‍⚕️ *Doctor:* ${ctx.doctorName}`,
+    `*When:* ${when}`,
+    `*Doctor:* ${ctx.doctorName}`,
     '',
     'Please try to arrive a few minutes early.',
     'If you need to reschedule, contact the clinic as soon as possible.',

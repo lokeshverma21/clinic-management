@@ -12,18 +12,18 @@ import type { AppointmentWhatsAppContext } from '../../../notification.types';
 export function buildWhatsAppConfirmationMessage(
   ctx: AppointmentWhatsAppContext,
 ): string {
-  const clinicLabel = ctx.clinicName ?? 'the clinic';
+  const clinicLabel = ctx.clinicName ?? 'clinic';
   const when = ctx.clinicTimezone
     ? formatAppointmentDateTime(ctx.startTime, ctx.clinicTimezone)
     : ctx.startTime.toLocaleString();
 
   return [
-    `Hi ${ctx.patientName} 👋`,
+    `Hi ${ctx.patientName}`,
     '',
     `Your appointment at *${clinicLabel}* is confirmed.`,
     '',
-    `📅 *When:* ${when}`,
-    `👨‍⚕️ *Doctor:* ${ctx.doctorName}`,
+    `*When:* ${when}`,
+    `*Doctor:* ${ctx.doctorName}`,
     '',
     'If you need to reschedule, please contact the clinic.',
     '',
