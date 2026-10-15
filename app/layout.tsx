@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import { Cuts } from "@/components/keyframery/cuts";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -32,7 +33,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-full antialiased`}
     >
       <ClerkProvider>
-        <body className="min-h-full flex flex-col">{children}</body>
+        <body className="min-h-full flex flex-col">{children} 
+          <Cuts />
+        </body>
       </ClerkProvider>
     </html>
   );

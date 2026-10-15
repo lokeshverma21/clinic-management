@@ -1,0 +1,744 @@
+/*
+ * Keyframery v0: film cuts for shadcn. https://keyframery.com
+ *
+ * - Unlayered on purpose: it beats Tailwind's @layer utilities, where shadcn's animate-in classes live.
+ * - Everything is scoped under html[data-kf], which <Cuts /> sets while enabled.
+ * - The menu choice lives on <html> (data-kf-dialog="punch-in"); an element's own data-cut beats it.
+ *   The two selector forms exclude each other, so specificity never decides.
+ * - "Open" matches Radix (data-state) and Base UI (data-open); "closed" likewise.
+ * - Entrances fill backwards only: once in, the part is back to its own styles (a held transform or
+ *   filter, even at zero, would make it a containing block for its fixed-position children).
+ *   Exits fill both, so the part stays invisible until the library removes it.
+ */
+
+:where(:root) {
+  --kf-pace: 1;
+  --kf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --kf-ease-exit: cubic-bezier(0.5, 0, 0.75, 0);
+  --kf-travel: 0.35;
+  --kf-blur: 8px;
+  --kf-depth: 0.94;
+  --kf-hold: 300ms;
+  --kf-cap: 1000s;
+}
+
+
+/* ---------- Dialog, alert dialog, command: rack focus ---------- */
+
+:is(
+    :where(html[data-kf][data-kf-dialog="rack-focus"]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])[data-cut="rack-focus"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-rack-in min(calc(340ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="rack-focus"]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])[data-cut="rack-focus"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-rack-out min(calc(220ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="rack-focus"]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])[data-cut="rack-focus"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-veil-in min(calc(340ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="rack-focus"]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])[data-cut="rack-focus"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-veil-out min(calc(220ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+@keyframes kf-rack-in {
+  from {
+    opacity: 0;
+    transform: translate(calc(var(--kf-dx, 0px) * var(--kf-travel)), calc(var(--kf-dy, 0px) * var(--kf-travel))) scale(var(--kf-depth));
+    filter: blur(var(--kf-blur));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes kf-rack-out {
+  from {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(var(--kf-dx, 0px) * var(--kf-travel)), calc(var(--kf-dy, 0px) * var(--kf-travel))) scale(var(--kf-depth));
+    filter: blur(calc(var(--kf-blur) * 0.75));
+  }
+}
+
+@keyframes kf-veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes kf-veil-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+
+/* ---------- Sheet: travels in from its own edge ---------- */
+
+/* Base UI sheets use CSS transitions, which would beat our keyframes; turn them off wherever we animate. */
+:is(
+    :where(html[data-kf]:not([data-kf-sheet="none"])) :is([data-slot="sheet-content"], [data-slot="sheet-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="sheet-content"], [data-slot="sheet-overlay"])[data-cut]:not([data-cut="none"])
+  ) {
+  transition: none;
+}
+
+:where(html[data-kf]) [data-slot="sheet-content"] {
+  --kf-sx: 100%;
+  --kf-sy: 0px;
+}
+:where(html[data-kf]) [data-slot="sheet-content"][data-side="left"] {
+  --kf-sx: -100%;
+}
+:where(html[data-kf]) [data-slot="sheet-content"][data-side="top"] {
+  --kf-sx: 0px;
+  --kf-sy: -100%;
+}
+:where(html[data-kf]) [data-slot="sheet-content"][data-side="bottom"] {
+  --kf-sx: 0px;
+  --kf-sy: 100%;
+}
+
+:is(
+    :where(html[data-kf]:is([data-kf-sheet="slide-sink"], [data-kf-sheet="slide"])) [data-slot="sheet-content"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-content"]:is([data-cut="slide-sink"], [data-cut="slide"])
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-panel-in min(calc(460ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf]:is([data-kf-sheet="slide-sink"], [data-kf-sheet="slide"])) [data-slot="sheet-content"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-content"]:is([data-cut="slide-sink"], [data-cut="slide"])
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-panel-out min(calc(260ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+:is(
+    :where(html[data-kf]:is([data-kf-sheet="slide-sink"], [data-kf-sheet="slide"])) [data-slot="sheet-overlay"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-overlay"]:is([data-cut="slide-sink"], [data-cut="slide"])
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-veil-in min(calc(460ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf]:is([data-kf-sheet="slide-sink"], [data-kf-sheet="slide"])) [data-slot="sheet-overlay"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-overlay"]:is([data-cut="slide-sink"], [data-cut="slide"])
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-veil-out min(calc(260ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+/* translate: none cancels Base UI's starting/ending-style translate so the two don't stack */
+@keyframes kf-panel-in {
+  from {
+    transform: translate(var(--kf-sx), var(--kf-sy));
+    translate: none;
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    translate: none;
+    opacity: 1;
+  }
+}
+
+@keyframes kf-panel-out {
+  from {
+    transform: none;
+    translate: none;
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--kf-sx), var(--kf-sy));
+    translate: none;
+    opacity: 1;
+  }
+}
+
+/* ---------- Sink: the page steps back while a sheet or drawer is up ---------- */
+
+:where(html[data-kf]) [data-kf-sink] {
+  transform-origin: 50% 0;
+  transition:
+    scale min(calc(460ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease),
+    filter min(calc(460ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease),
+    border-radius min(calc(460ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease);
+}
+
+:where(html[data-kf]) [data-kf-sink="off"] {
+  transition-timing-function: var(--kf-ease-exit);
+}
+
+:where(html[data-kf]) [data-kf-sink="on"] {
+  scale: 0.975;
+  filter: brightness(0.94);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+:where(html[data-kf][data-kf-sinking]) body {
+  background-color: color-mix(in oklab, var(--background) 80%, black);
+}
+
+
+/* ---------- Dialog menu: punch-in and fade ---------- */
+
+:is(
+    :where(html[data-kf][data-kf-dialog="punch-in"]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])[data-cut="punch-in"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-punch-in min(calc(260ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="punch-in"]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])[data-cut="punch-in"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-punch-out min(calc(160ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="fade"]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])[data-cut="fade"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-fade-in min(calc(200ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="fade"]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"])[data-cut="fade"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-fade-out min(calc(150ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="punch-in"]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])[data-cut="punch-in"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-veil-in min(calc(260ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="punch-in"]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])[data-cut="punch-in"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-veil-out min(calc(160ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="fade"]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])[data-cut="fade"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-veil-in min(calc(200ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-dialog="fade"]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]):not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])[data-cut="fade"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-veil-out min(calc(150ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+@keyframes kf-punch-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kf-punch-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes kf-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes kf-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- Sheet menu: fade ---------- */
+
+:is(
+    :where(html[data-kf][data-kf-sheet="fade"]) [data-slot="sheet-content"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-content"][data-cut="fade"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-panel-fade-in min(calc(200ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-sheet="fade"]) [data-slot="sheet-content"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-content"][data-cut="fade"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-panel-fade-out min(calc(150ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+:is(
+    :where(html[data-kf][data-kf-sheet="fade"]) [data-slot="sheet-overlay"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-overlay"][data-cut="fade"]
+  ):is([data-state="open"], [data-open]:not([data-open="false"])) {
+  animation: kf-veil-in min(calc(200ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:is(
+    :where(html[data-kf][data-kf-sheet="fade"]) [data-slot="sheet-overlay"]:not([data-cut], [data-cut="none"] *),
+    :where(html[data-kf]) [data-slot="sheet-overlay"][data-cut="fade"]
+  ):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation: kf-veil-out min(calc(150ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) both;
+}
+
+@keyframes kf-panel-fade-in {
+  from {
+    opacity: 0;
+    transform: none;
+    translate: none;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    translate: none;
+  }
+}
+
+@keyframes kf-panel-fade-out {
+  from {
+    opacity: 1;
+    transform: none;
+    translate: none;
+  }
+  to {
+    opacity: 0;
+    transform: none;
+    translate: none;
+  }
+}
+
+
+/* ---------- Tuned: the libraries' own keyframes, retimed to the film's pace ---------- */
+
+:where(html[data-kf])
+  :is(
+    [data-slot="popover-content"],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"],
+    [data-slot="context-menu-content"],
+    [data-slot="context-menu-sub-content"],
+    [data-slot="menubar-content"],
+    [data-slot="menubar-sub-content"],
+    [data-slot="select-content"],
+    [data-slot="combobox-content"],
+    [data-slot="hover-card-content"],
+    [data-slot="tooltip-content"],
+    [data-slot="navigation-menu-content"],
+    [data-slot="navigation-menu-viewport"],
+    [data-slot="accordion-content"]
+  ):not([data-cut="none"], [data-cut="none"] *):is(
+    [data-state="open"],
+    [data-state="delayed-open"],
+    [data-state="instant-open"],
+    [data-open]:not([data-open="false"]),
+    [data-state="closed"],
+    [data-closed]:not([data-closed="false"])
+  ) {
+  animation-duration: min(calc(180ms * var(--kf-pace)), var(--kf-cap));
+  animation-timing-function: var(--kf-ease);
+  transition-duration: min(calc(180ms * var(--kf-pace)), var(--kf-cap));
+  transition-timing-function: var(--kf-ease);
+}
+
+:where(html[data-kf])
+  :is(
+    [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"],
+    [data-slot="context-menu-content"], [data-slot="context-menu-sub-content"], [data-slot="menubar-content"],
+    [data-slot="menubar-sub-content"], [data-slot="select-content"], [data-slot="combobox-content"],
+    [data-slot="hover-card-content"], [data-slot="tooltip-content"], [data-slot="navigation-menu-content"],
+    [data-slot="navigation-menu-viewport"], [data-slot="accordion-content"]
+  ):not([data-cut="none"], [data-cut="none"] *):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  animation-timing-function: var(--kf-ease-exit);
+  transition-timing-function: var(--kf-ease-exit);
+}
+
+/* Collapsible ships with no motion at all, which is a jump cut. It gets the accordion's height cut. */
+:where(html[data-kf]) [data-slot="collapsible-content"]:not([data-cut="none"], [data-cut="none"] *, [data-kf-static]):is(
+    [data-state="open"],
+    [data-open]:not([data-open="false"])
+  ) {
+  animation: kf-grow min(calc(180ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease);
+}
+
+:where(html[data-kf]) [data-slot="collapsible-content"]:not([data-cut="none"], [data-cut="none"] *):is(
+    [data-state="closed"],
+    [data-closed]:not([data-closed="false"])
+  ) {
+  animation: kf-shrink min(calc(180ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease-exit) forwards;
+}
+
+@keyframes kf-grow {
+  from {
+    height: 0;
+    overflow: clip;
+  }
+  to {
+    height: var(--radix-collapsible-content-height, var(--collapsible-panel-height, auto));
+    overflow: clip;
+  }
+}
+
+@keyframes kf-shrink {
+  from {
+    height: var(--radix-collapsible-content-height, var(--collapsible-panel-height, auto));
+    overflow: clip;
+  }
+  to {
+    height: 0;
+    overflow: clip;
+  }
+}
+
+
+/* ---------- Responses: how a control answers the user's own press, tick or drag ---------- */
+/*
+ * Cuts animate a change of picture; responses confirm an input on the control itself. Timings follow
+ * IBM Carbon's micro-interaction durations: 70 ms to press in, 110-150 ms for small state changes,
+ * 240 ms for a value bar. <Cuts responses="none" /> turns them all off; data-cut="none" opts a part out.
+ * Where stock shadcn already responds (the button's 1px press nudge, the slider thumb's ring, the switch
+ * thumb's slide, the progress bar's width), these retime or complete it and never stack a second effect.
+ */
+
+/* Toggle: the tick draws itself and the radio dot grows from its centre. The engine marks a control
+   (data-kf-toggled) only when its state flips, so controls that load already checked don't redraw. */
+:where(html[data-kf]:not([data-kf-responses="none"]))
+  :is(
+    [data-slot="checkbox"], [data-slot="questionnaire-choice"], [data-slot="command-item"], [data-slot="combobox-item"],
+    [data-slot="dropdown-menu-checkbox-item"], [data-slot="dropdown-menu-radio-item"], [data-slot="context-menu-checkbox-item"],
+    [data-slot="context-menu-radio-item"], [data-slot="menubar-checkbox-item"], [data-slot="menubar-radio-item"]
+  )[data-kf-toggled="on"]:not([data-cut="none"], [data-cut="none"] *)
+  svg :is(path, polyline, line) {
+  stroke-dasharray: 30;
+  animation: kf-draw min(calc(150ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+:where(html[data-kf]:not([data-kf-responses="none"]))
+  :is(
+    [data-slot="radio-group-item"][data-kf-toggled="on"] [data-slot="radio-group-indicator"] > *,
+    [data-slot="questionnaire-choice"][data-kf-toggled="on"] [data-slot="questionnaire-choice-indicator-dot"]
+  ):not([data-cut="none"], [data-cut="none"] *) {
+  animation: kf-dot-in min(calc(150ms * var(--kf-pace)), var(--kf-cap)) var(--kf-ease) backwards;
+}
+
+/* A choice card (a field label holding a checkbox or radio) changes colour instead of jumping. */
+:where(html[data-kf]:not([data-kf-responses="none"])) [data-slot="field-label"]:not([data-cut="none"], [data-cut="none"] *) {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: min(calc(150ms * var(--kf-pace)), var(--kf-cap));
+  transition-timing-function: var(--kf-ease);
+}
+
+@keyframes kf-draw {
+  from {
+    stroke-dashoffset: 30;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes kf-dot-in {
+  from {
+    transform: scale(0); /* composes after the dot's own centring translate */
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Press: compact controls dip while held, quicker in than out. Full-width rows (sidebar items, menu
+     items) don't scale; they get Highlight instead. */
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    :is(
+      [data-slot="button"], [data-slot="toggle"], [data-slot="toggle-group-item"], [data-slot="pagination-link"],
+      [data-slot="carousel-previous"], [data-slot="carousel-next"], [data-slot="dialog-close"], [data-slot="sheet-close"],
+      [data-slot="alert-dialog-action"], [data-slot="alert-dialog-cancel"], [data-slot="attachment-action"],
+      [data-slot="combobox-chip-remove"], [data-slot="sidebar-trigger"], [data-slot="message-scroller-button"],
+      [data-slot="calendar"] :is(.rdp-button_previous, .rdp-button_next)
+    ):not([data-cut="none"], [data-cut="none"] *):active {
+    scale: 0.97;
+    transition-duration: calc(70ms * var(--kf-pace));
+  }
+
+  /* State icons. The accordion's chevron turns instead of being swapped for an up chevron. An item that
+     loads open shows the turned chevron at once: an icon coming out of display:none has nothing to turn from. */
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="accordion-trigger"]:not([data-cut="none"], [data-cut="none"] *)
+    > [data-slot="accordion-trigger-icon"]:has(+ [data-slot="accordion-trigger-icon"]) {
+    display: block;
+    transition: rotate calc(200ms * var(--kf-pace)) var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="accordion-trigger"][aria-expanded="true"]:not([data-cut="none"], [data-cut="none"] *)
+    > [data-slot="accordion-trigger-icon"]:has(+ [data-slot="accordion-trigger-icon"]) {
+    rotate: 180deg;
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="accordion-trigger"]:not([data-cut="none"], [data-cut="none"] *)
+    > [data-slot="accordion-trigger-icon"] + [data-slot="accordion-trigger-icon"] {
+    display: none;
+  }
+
+  /* A combobox's chevron turns while its list is open. */
+  :where(html[data-kf]:not([data-kf-responses="none"])) [data-slot="combobox-trigger"]:not([data-cut="none"], [data-cut="none"] *) > svg {
+    transition: rotate calc(200ms * var(--kf-pace)) var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="combobox-trigger"]:is([data-popup-open], [aria-expanded="true"]):not([data-cut="none"], [data-cut="none"] *)
+    > svg {
+    rotate: 180deg;
+  }
+
+  /* A close ✕ turns a quarter while pressed; arrows nudge toward where they go. */
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    :is(
+      [data-slot="dialog-close"], [data-slot="sheet-close"], [data-slot="toast-close"], [data-slot="combobox-chip-remove"],
+      [data-slot="combobox-clear"], [data-slot="carousel-previous"], [data-slot="carousel-next"], [data-slot="pagination-link"],
+      [data-slot="message-scroller-button"], [data-slot="calendar"] :is(.rdp-button_previous, .rdp-button_next)
+    ):not([data-cut="none"], [data-cut="none"] *)
+    > svg {
+    transition:
+      rotate calc(150ms * var(--kf-pace)) var(--kf-ease),
+      translate calc(150ms * var(--kf-pace)) var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    :is([data-slot="dialog-close"], [data-slot="sheet-close"], [data-slot="toast-close"], [data-slot="combobox-chip-remove"], [data-slot="combobox-clear"]):not([data-cut="none"], [data-cut="none"] *):active
+    > svg {
+    rotate: 90deg;
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    :is([data-slot="carousel-previous"], [data-slot="pagination-link"][aria-label*="previous" i], [data-slot="calendar"] .rdp-button_previous):not([data-cut="none"], [data-cut="none"] *):active
+    > svg {
+    translate: -2px 0;
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    :is([data-slot="carousel-next"], [data-slot="pagination-link"][aria-label*="next" i], [data-slot="calendar"] .rdp-button_next):not([data-cut="none"], [data-cut="none"] *):active
+    > svg {
+    translate: 2px 0;
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="message-scroller-button"]:not([data-direction="start"], [data-cut="none"], [data-cut="none"] *):active
+    > svg {
+    translate: 0 2px;
+  }
+
+  /* Switch: the thumb travels on the theme's curve and stretches toward where it's going while held. */
+  :where(html[data-kf]:not([data-kf-responses="none"])) [data-slot="switch-thumb"]:not([data-cut="none"] *) {
+    transition-duration: calc(150ms * var(--kf-pace));
+    transition-timing-function: var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="switch"]:not([data-cut="none"], [data-cut="none"] *):active
+    > [data-slot="switch-thumb"] {
+    scale: 1.18 1;
+    transform-origin: left center;
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="switch"]:is([data-checked]:not([data-checked="false"]), [data-state="checked"]):not([data-cut="none"], [data-cut="none"] *):active
+    > [data-slot="switch-thumb"] {
+    transform-origin: right center;
+  }
+
+  /* Drag: the slider thumb grows while it's held and settles on release. */
+  :where(html[data-kf]:not([data-kf-responses="none"])) [data-slot="slider-thumb"]:not([data-cut="none"] *) {
+    transition:
+      color var(--default-transition-duration, 150ms) var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow var(--default-transition-duration, 150ms) var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      scale calc(150ms * var(--kf-pace)) var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="slider"]:is([data-dragging], :active):not([data-cut="none"], [data-cut="none"] *)
+    [data-slot="slider-thumb"] {
+    scale: 1.25;
+    transition:
+      color var(--default-transition-duration, 150ms) var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow var(--default-transition-duration, 150ms) var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      scale calc(110ms * var(--kf-pace)) var(--kf-ease);
+  }
+
+  /* Drag: a resize handle thickens and takes the focus colour while it's being dragged. A box-shadow, not
+     a scale, so the grip inside it keeps its shape. */
+  :where(html[data-kf]:not([data-kf-responses="none"])) [data-slot="resizable-handle"]:not([data-cut="none"] *) {
+    transition:
+      background-color calc(150ms * var(--kf-pace)) var(--kf-ease),
+      box-shadow calc(150ms * var(--kf-pace)) var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="resizable-handle"][data-separator="active"]:not([data-cut="none"], [data-cut="none"] *) {
+    background-color: var(--ring);
+    box-shadow: 0 0 0 1px var(--ring);
+  }
+
+  /* Sidebar: the width follows the theme's curve, and the labels leave before it closes and arrive after
+     it opens, the way a J-cut lets the next scene's sound lead. Labels are matched by structure (a span in a
+     menu item's button or link) because a collapsible item's trigger takes over the button's data-slot. */
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="sidebar"]:not([data-cut="none"], [data-cut="none"] *)
+    :is([data-slot="sidebar-container"], [data-slot="sidebar-gap"]) {
+    transition-duration: calc(240ms * var(--kf-pace));
+    transition-timing-function: var(--kf-ease);
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="sidebar"]:not([data-cut="none"], [data-cut="none"] *)
+    :is([data-slot="sidebar-menu-item"], [data-slot="sidebar-menu-sub-item"]) > :is(button, a) > span {
+    transition: opacity calc(150ms * var(--kf-pace)) var(--kf-ease) calc(120ms * var(--kf-pace));
+  }
+
+  :where(html[data-kf]:not([data-kf-responses="none"]))
+    [data-slot="sidebar"][data-collapsible="icon"]:not([data-cut="none"], [data-cut="none"] *)
+    :is([data-slot="sidebar-menu-item"], [data-slot="sidebar-menu-sub-item"]) > :is(button, a) > span {
+    opacity: 0;
+    transition: opacity calc(80ms * var(--kf-pace)) var(--kf-ease-exit);
+  }
+
+  /* Fill: a progress bar eases to its new value on the theme's curve. */
+  :where(html[data-kf]:not([data-kf-responses="none"])) [data-slot="progress-indicator"]:not([data-cut="none"] *) {
+    transition-duration: calc(240ms * var(--kf-pace));
+    transition-timing-function: var(--kf-ease);
+  }
+}
+
+/* ---------- Reduced motion: same selectors; the cuts become short fades with no movement ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :where(:root) {
+    --kf-cap: 120ms;
+  }
+
+  @keyframes kf-rack-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes kf-rack-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes kf-punch-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes kf-punch-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes kf-panel-in {
+    from { opacity: 0; transform: none; translate: none; }
+    to { opacity: 1; transform: none; translate: none; }
+  }
+  @keyframes kf-panel-out {
+    from { opacity: 1; transform: none; translate: none; }
+    to { opacity: 0; transform: none; translate: none; }
+  }
+  @keyframes kf-grow {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes kf-shrink {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* The tuned components' own keyframes move (zoom, slide); under reduced motion they fade instead. */
+  :where(html[data-kf])
+    :is(
+      [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"],
+      [data-slot="context-menu-content"], [data-slot="context-menu-sub-content"], [data-slot="menubar-content"],
+      [data-slot="menubar-sub-content"], [data-slot="select-content"], [data-slot="combobox-content"],
+      [data-slot="hover-card-content"], [data-slot="tooltip-content"], [data-slot="navigation-menu-content"],
+      [data-slot="navigation-menu-viewport"], [data-slot="accordion-content"]
+    ):not([data-cut="none"], [data-cut="none"] *):is([data-state="open"], [data-state="delayed-open"], [data-state="instant-open"], [data-open]:not([data-open="false"])) {
+    animation-name: kf-fade-in;
+    transition-property: opacity;
+  }
+
+  :where(html[data-kf])
+    :is(
+      [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"],
+      [data-slot="context-menu-content"], [data-slot="context-menu-sub-content"], [data-slot="menubar-content"],
+      [data-slot="menubar-sub-content"], [data-slot="select-content"], [data-slot="combobox-content"],
+      [data-slot="hover-card-content"], [data-slot="tooltip-content"], [data-slot="navigation-menu-content"],
+      [data-slot="navigation-menu-viewport"], [data-slot="accordion-content"]
+    ):not([data-cut="none"], [data-cut="none"] *):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+    animation-name: kf-fade-out;
+    transition-property: opacity;
+  }
+
+  :where(html[data-kf]) [data-kf-sink="on"] {
+    scale: 1;
+    filter: none;
+    border-radius: 0;
+  }
+  /* Responses: the tick and the radio dot fade in; nothing draws or grows. */
+  @keyframes kf-draw {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes kf-dot-in {
+    from { opacity: 0; }
+  }
+}
