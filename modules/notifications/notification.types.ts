@@ -25,6 +25,22 @@ export interface AppointmentEmailContext {
   status: string;
 }
 
+export interface AppointmentWhatsAppContext {
+  appointmentId: string;
+  clinicId: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  doctorName: string;
+  /** Optional for client-side opens; resolved server-side for automated sends. */
+  clinicName?: string;
+  /** Optional for client-side opens; resolved server-side for automated sends. */
+  clinicTimezone?: string;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+}
+
 export interface EmailTemplateContent {
   subject: string;
   html: string;

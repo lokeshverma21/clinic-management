@@ -10,3 +10,5 @@ export {
   handleAppointmentUpdated,
   handleAppointmentCanceled,
 } from './notification.appointment-hooks';
+export { getWhatsAppUrl } from './channels/whatsapp/whatsapp.service';
+export type { WhatsAppMessageType } from './channels/whatsapp/whatsapp.service';

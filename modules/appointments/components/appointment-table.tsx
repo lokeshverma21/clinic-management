@@ -9,7 +9,10 @@ import {
   CheckCircle2,
   Mail,
   Loader2,
+  MessageCircle,
 } from "lucide-react"
+import { getWhatsAppUrl } from "@/modules/notifications/channels/whatsapp/whatsapp.service"
+import type { WhatsAppMessageType } from "@/modules/notifications/channels/whatsapp/whatsapp.service"
 import {
   Table,
   TableBody,
@@ -45,6 +48,39 @@ export function AppointmentTable({
   onRefresh 
 }: AppointmentTableProps) {
   const [sendingEmailId, setSendingEmailId] = React.useState<string | null>(null)
+
+  const handleOpenWhatsApp = (
+    type: WhatsAppMessageType,
+    appointment: AppointmentWithDetails,
+  ) => {
+    const phone = appointment.patient.phone
+    if (!phone) {
+      alert("This patient does not have a phone number on file.")
+      return
+    }
+
+    const url = getWhatsAppUrl(type, {
+      appointmentId: appointment.id,
+      clinicId: appointment.clinicId,
+      patientId: appointment.patientId,
+      patientName: appointment.patient.fullName,
+      patientPhone: phone,
+      doctorName: appointment.doctor.fullName,
+      // clinicName and clinicTimezone are not available in the client-side list
+      // view — omitted here; the message template falls back gracefully.
+      // Server-side automated sends will always supply them.
+      startTime: new Date(appointment.startTime),
+      endTime: new Date(appointment.endTime),
+      status: appointment.status,
+    })
+
+    if (!url) {
+      alert("Could not generate a WhatsApp link. Please check the patient\u2019s phone number.")
+      return
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer")
+  }
 
   const handleSendConfirmationEmail = async (appointment: AppointmentWithDetails) => {
     if (!appointment.patient.email) {
@@ -183,6 +219,22 @@ export function AppointmentTable({
                           <Mail size={16} className="text-muted-foreground" />
                         )}
                         Send Confirmation Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="gap-2"
+                        disabled={!apt.patient.phone}
+                        onClick={() => handleOpenWhatsApp("confirmation", apt)}
+                      >
+                        <MessageCircle size={16} className="text-green-600" />
+                        Send WhatsApp Confirmation
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="gap-2"
+                        disabled={!apt.patient.phone}
+                        onClick={() => handleOpenWhatsApp("reminder", apt)}
+                      >
+                        <MessageCircle size={16} className="text-green-600" />
+                        Send WhatsApp Reminder
                       </DropdownMenuItem>
                       {!isCompletedOrCanceled && (
                         <>
