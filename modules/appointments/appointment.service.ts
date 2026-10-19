@@ -15,6 +15,7 @@ import type {
   UpdateAppointmentInput,
   ListAppointmentsFilters,
   ListAppointmentsResult,
+  AppointmentWithDetails,
 } from './appointment.types';
 
 function assertCanModify(ctx: RequestContext, appointment: Appointment): void {
@@ -206,4 +207,12 @@ export async function cancelAppointment(ctx: RequestContext, appointmentId: stri
   }
 
   return appointment;
+}
+
+export async function listAppointmentsForPatient(
+  ctx: RequestContext,
+  patientId: string,
+): Promise<AppointmentWithDetails[]> {
+  await getPatient(ctx, patientId);
+  return appointmentRepository.listAppointmentsByPatientId(ctx.clinicId, patientId);
 }

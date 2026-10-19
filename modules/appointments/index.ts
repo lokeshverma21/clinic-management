@@ -6,4 +6,5 @@ export {
   updateAppointment,
   cancelAppointment,
   countUpcomingAppointmentsForMembership,
+  listAppointmentsForPatient,
 } from './appointment.service';

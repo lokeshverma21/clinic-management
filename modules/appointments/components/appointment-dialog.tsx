@@ -46,6 +46,7 @@ interface AppointmentDialogProps {
   onOpenChange: (open: boolean) => void
   mode: "add" | "edit"
   appointment?: AppointmentWithDetails | null
+  initialPatientId?: string
   onSuccess?: () => void
 }
 
@@ -67,6 +68,7 @@ type DataStatus =
 function buildInitialForm(
   mode: "add" | "edit",
   appointment?: AppointmentWithDetails | null,
+  initialPatientId?: string,
 ): FormState {
   if (mode === "edit" && appointment) {
     const start = new Date(appointment.startTime)
@@ -81,7 +83,7 @@ function buildInitialForm(
     }
   }
   return {
-    patientId: "",
+    patientId: initialPatientId ?? "",
     doctorMembershipId: "",
     date: new Date(),
     startTime: "",
@@ -95,20 +97,21 @@ export function AppointmentDialog({
   onOpenChange,
   mode,
   appointment,
+  initialPatientId,
   onSuccess,
 }: AppointmentDialogProps) {
-  const [form, setForm] = React.useState<FormState>(() => buildInitialForm(mode, appointment))
+  const [form, setForm] = React.useState<FormState>(() => buildInitialForm(mode, appointment, initialPatientId))
   const [dataStatus, setDataStatus] = React.useState<DataStatus>({ type: "idle" })
   const [submitError, setSubmitError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isAddPatientOpen, setIsAddPatientOpen] = React.useState(false)
 
   const [syncKey, setSyncKey] = React.useState("")
-  const currentKey = open ? `${mode}-${appointment?.id ?? "new"}` : "closed"
+  const currentKey = open ? `${mode}-${appointment?.id ?? initialPatientId ?? "new"}` : "closed"
 
   if (currentKey !== syncKey) {
     setSyncKey(currentKey)
-    setForm(buildInitialForm(mode, appointment))
+    setForm(buildInitialForm(mode, appointment, initialPatientId))
     setSubmitError(null)
     if (open) setDataStatus({ type: "loading" })
   }

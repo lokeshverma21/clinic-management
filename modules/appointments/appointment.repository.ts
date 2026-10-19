@@ -1,5 +1,5 @@
 // src/modules/appointments/appointment.repository.ts
-import { and, eq, gt, lt, ne, isNull, or } from 'drizzle-orm';
+import { and, desc, eq, gt, lt, ne, isNull, or } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { appointments, memberships, patients, users } from '@/db/schema';
 import type { NewAppointment, Appointment } from '@/db/schema';
@@ -59,6 +59,54 @@ export async function listAppointments(
     .innerJoin(users, eq(memberships.userId, users.id))
     .where(and(...conditions))
     .orderBy(appointments.startTime);
+
+  return rows.map((row) => ({
+    ...row.appointment,
+    patient: {
+      id: row.patient.id,
+      fullName: row.patient.fullName,
+      phone: row.patient.phone,
+      email: row.patient.email,
+    },
+    doctor: {
+      membershipId: row.doctor.membershipId,
+      fullName: row.doctor.fullName,
+      email: row.doctor.email,
+    },
+  }));
+}
+
+export async function listAppointmentsByPatientId(
+  clinicId: string,
+  patientId: string,
+): Promise<AppointmentWithDetails[]> {
+  const conditions = [
+    eq(appointments.clinicId, clinicId),
+    eq(appointments.patientId, patientId),
+    isNull(appointments.deletedAt),
+  ];
+
+  const rows = await db
+    .select({
+      appointment: appointments,
+      patient: {
+        id: patients.id,
+        fullName: patients.fullName,
+        phone: patients.phone,
+        email: patients.email,
+      },
+      doctor: {
+        membershipId: memberships.id,
+        fullName: users.fullName,
+        email: users.email,
+      },
+    })
+    .from(appointments)
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .innerJoin(memberships, eq(appointments.doctorMembershipId, memberships.id))
+    .innerJoin(users, eq(memberships.userId, users.id))
+    .where(and(...conditions))
+    .orderBy(desc(appointments.startTime));
 
   return rows.map((row) => ({
     ...row.appointment,
