@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { PatientAvatar } from "./patient-avatar"
 import { type Patient } from "../patients.types"
+import { redirect } from "next/navigation"
 
 interface PatientTableProps {
   patients: Patient[];
@@ -81,14 +82,14 @@ export function PatientTable({
             {patients.map((patient) => {
               const formattedDob = patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : "Not specified"
               return (
-                <TableRow key={patient.id} className="group hover:bg-muted/30 transition-colors border-border/50">
+                <TableRow onClick={() => redirect(`/patients/${patient.id}`)} key={patient.id} className="group cursor-pointer hover:bg-muted/30 transition-colors border-border/50">
                   <TableCell className="py-4 pl-6">
                     <PatientAvatar name={patient.fullName} />
                   </TableCell>
                   <TableCell className="py-4">
                     <span 
                       className="font-medium text-sm group-hover:text-primary transition-colors cursor-pointer" 
-                      onClick={() => onViewPatient(patient.id)}
+                      // onClick={() => onViewPatient(patient.id)}
                     >
                       {patient.fullName}
                     </span>
