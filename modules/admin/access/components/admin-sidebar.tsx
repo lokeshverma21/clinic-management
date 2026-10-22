@@ -15,7 +15,7 @@ import {
   SidebarFooter,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { ShieldAlert, LayoutDashboard, ScrollText } from "lucide-react"
+import { ShieldAlert, LayoutDashboard, Building2, ScrollText } from "lucide-react"
 import type { PlatformContext } from "../access.types"
 
 export interface AdminNavItem {
@@ -29,6 +29,11 @@ export const ADMIN_NAV_CONFIG: AdminNavItem[] = [
     title: "Overview",
     url: "/admin",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Clinics",
+    url: "/admin/clinics",
+    icon: Building2,
   },
   {
     title: "Audit Logs",
