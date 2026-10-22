@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { Show, UserButton } from "@clerk/nextjs";
 import Script from "next/script";
+import { ClinicStatusBanner } from "@/modules/subscriptions";
 
 export default async function DashboardLayout({
   children,
@@ -75,6 +76,8 @@ export default async function DashboardLayout({
             </Show>
           </div>
         </header>
+
+        <ClinicStatusBanner clinic={clinic} />
 
         <main className="flex-1 p-6">
           {children}

@@ -1,6 +1,7 @@
 // modules/staff/staff.service.ts
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '@/lib/errors/app-error';
 import type { RequestContext } from '@/lib/auth/request-context';
+import { assertClinicWritable } from '@/lib/auth/clinic-access.service';
 import { sendStaffInvitation } from '@/lib/auth/clerk-invitations';
 import { countUpcomingAppointmentsForMembership } from '@/modules/appointments';
 import * as staffRepository from './staff.repository';
@@ -46,6 +47,7 @@ export async function listStaff(ctx: RequestContext): Promise<StaffListItem[]> {
 
 export async function inviteStaff(ctx: RequestContext, input: InviteStaffInput): Promise<Membership> {
   assertOwner(ctx, 'invite staff');
+  await assertClinicWritable(ctx);
 
   const existing = await staffRepository.findExistingMembershipByEmail(ctx.clinicId, input.email);
   if (existing) {
@@ -81,6 +83,7 @@ export async function updateStaff(
   input: UpdateStaffInput,
 ): Promise<Membership> {
   assertOwner(ctx, 'change staff roles or details');
+  await assertClinicWritable(ctx);
 
   const existing = await staffRepository.getMembershipInClinic(ctx.clinicId, membershipId);
   if (!existing) throw new NotFoundError('STAFF_NOT_FOUND', 'Staff member not found');
@@ -131,6 +134,7 @@ export async function updateStaff(
  */
 export async function deactivateStaff(ctx: RequestContext, membershipId: string): Promise<DeactivateStaffResult> {
   assertOwner(ctx, 'deactivate staff');
+  await assertClinicWritable(ctx);
 
   const existing = await staffRepository.getMembershipInClinic(ctx.clinicId, membershipId);
   if (!existing) throw new NotFoundError('STAFF_NOT_FOUND', 'Staff member not found');

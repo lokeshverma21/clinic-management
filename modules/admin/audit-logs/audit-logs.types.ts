@@ -3,6 +3,7 @@ import type { PlatformAuditLog } from '@/db/schema';
 
 export const ADMIN_AUDIT_ACTIONS = [
   'clinic.suspended',
+  'clinic.auto_suspended',
   'clinic.reactivated',
   'clinic.trial_extended',
   'subscription.trial_extended',

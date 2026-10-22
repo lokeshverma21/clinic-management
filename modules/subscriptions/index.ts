@@ -5,3 +5,4 @@ export type {
   BillingOverview, CheckoutPlanKey, CheckoutSession, Subscription, SyncResult, WebhookOutcome,
   StartSubscriptionInput, SubscriptionPlanDetails, SubscriptionHistoryItem, SubscriptionDetailsPayload, ManageAction
 } from './subscriptions.types';
+export { ClinicStatusBanner } from './components/clinic-status-banner';

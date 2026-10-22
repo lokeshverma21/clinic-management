@@ -1,6 +1,7 @@
 // /modules/patients/patient.service.ts
 import { ForbiddenError, NotFoundError } from '@/lib/errors/app-error';
 import type { RequestContext } from '@/lib/auth/request-context';
+import { assertClinicWritable } from '@/lib/auth/clinic-access.service';
 import * as patientRepository from './patients.repository';
 import type {
   CreatePatientInput,
@@ -42,6 +43,8 @@ export async function createPatient(
   ctx: RequestContext,
   input: CreatePatientInput,
 ): Promise<CreatePatientResult> {
+  await assertClinicWritable(ctx);
+
   const possibleDuplicates = await patientRepository.findPatientsByPhone(ctx.clinicId, input.phone);
 
   const patient = await patientRepository.insertPatient(ctx.clinicId, {
@@ -65,6 +68,8 @@ export async function updatePatient(
   patientId: string,
   input: UpdatePatientInput,
 ): Promise<Patient> {
+  await assertClinicWritable(ctx);
+
   const patient = await patientRepository.updatePatient(ctx.clinicId, patientId, input);
   if (!patient) throw new NotFoundError('PATIENT_NOT_FOUND', 'Patient not found');
   return patient;
@@ -80,6 +85,7 @@ export async function archivePatient(ctx: RequestContext, patientId: string): Pr
   if (ctx.role !== 'owner') {
     throw new ForbiddenError('OWNER_ONLY', 'Only the clinic owner can archive a patient record');
   }
+  await assertClinicWritable(ctx);
 
   const patient = await patientRepository.softDeletePatient(ctx.clinicId, patientId);
   if (!patient) throw new NotFoundError('PATIENT_NOT_FOUND', 'Patient not found');

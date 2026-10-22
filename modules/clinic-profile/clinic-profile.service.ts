@@ -18,6 +18,8 @@ function toProfile(clinic: Clinic): ClinicProfile {
     status: clinic.status,
     trialEndsAt: clinic.trialEndsAt,
     onboardingCompletedAt: clinic.onboardingCompletedAt ?? null,
+    suspensionSource: clinic.suspensionSource ?? null,
+    pastDueSince: clinic.pastDueSince ?? null,
   };
 }
 

@@ -119,7 +119,7 @@ export async function suspendClinic(
       );
     }
 
-    const updated = await updateClinicStatus(clinicId, 'suspended', tx);
+    const updated = await updateClinicStatus(clinicId, 'suspended', { suspensionSource: 'admin' }, tx);
 
     await recordAdminAction(
       ctx,
@@ -172,7 +172,15 @@ export async function reactivateClinic(
     const sub = await getClinicSubscription(clinicId, tx);
     const newStatus = resolveReactivatedStatus(sub?.status, existing.trialEndsAt);
 
-    const updated = await updateClinicStatus(clinicId, newStatus, tx);
+    const updated = await updateClinicStatus(
+      clinicId,
+      newStatus,
+      {
+        suspensionSource: null,
+        pastDueSince: newStatus === 'past_due' ? new Date() : null,
+      },
+      tx,
+    );
 
     await recordAdminAction(
       ctx,
@@ -195,8 +203,12 @@ export async function reactivateClinic(
 }
 
 /**
- * Extends the trial duration for a clinic currently in trial.
+ * Extends the trial duration for a clinic currently in trial, or suspended due to billing.
  * Requires `super_admin` (write permission).
+ *
+ * Allowed from 'trial', OR from 'suspended' when suspensionSource is 'billing'
+ * and subscription status is not 'active'.
+ * In the second case, restores status to 'trial' and clears suspensionSource and pastDueSince.
  *
  * Sets new trialEndsAt = max(now, current trialEndsAt) + days.
  * Executes the trial extension and audit log write inside a single transaction.
@@ -214,11 +226,25 @@ export async function extendClinicTrial(
       throw new NotFoundError('CLINIC_NOT_FOUND', 'Clinic not found');
     }
 
-    if (existing.status !== 'trial') {
+    const isFromTrial = existing.status === 'trial';
+    const isFromBillingSuspended =
+      existing.status === 'suspended' && existing.suspensionSource === 'billing';
+
+    if (!isFromTrial && !isFromBillingSuspended) {
       throw new ConflictError(
         'INVALID_STATUS_TRANSITION',
-        `Cannot extend trial for clinic with status '${existing.status}'. Clinic status must be 'trial'.`,
+        `Cannot extend trial for clinic with status '${existing.status}' and suspension source '${existing.suspensionSource ?? 'none'}'. Extension is only permitted for 'trial' status or 'billing'-suspended status.`,
       );
+    }
+
+    if (isFromBillingSuspended) {
+      const sub = await getClinicSubscription(clinicId, tx);
+      if (sub?.status === 'active') {
+        throw new ConflictError(
+          'INVALID_STATUS_TRANSITION',
+          'Cannot extend trial for suspended clinic with an active subscription. Reactivate the clinic instead.',
+        );
+      }
     }
 
     const nowTime = Date.now();
@@ -228,6 +254,18 @@ export async function extendClinicTrial(
     const baseTime = Math.max(nowTime, currentTrialEndsTime);
     const additionalMs = input.days * 24 * 60 * 60 * 1000;
     const newTrialEndsAt = new Date(baseTime + additionalMs);
+
+    if (isFromBillingSuspended) {
+      await updateClinicStatus(
+        clinicId,
+        'trial',
+        {
+          suspensionSource: null,
+          pastDueSince: null,
+        },
+        tx,
+      );
+    }
 
     const updated = await updateClinicTrialEndsAt(clinicId, newTrialEndsAt, tx);
 
@@ -239,6 +277,7 @@ export async function extendClinicTrial(
         targetId: clinicId,
         clinicId,
         metadata: {
+          previousStatus: existing.status,
           previousTrialEndsAt: existing.trialEndsAt?.toISOString() ?? null,
           newTrialEndsAt: newTrialEndsAt.toISOString(),
           days: input.days,

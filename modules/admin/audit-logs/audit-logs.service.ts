@@ -49,6 +49,30 @@ export async function recordAdminAction(
 }
 
 /**
+ * Records an automated system action in the platform audit log.
+ *
+ * Designed for background jobs and cron runners (e.g. subscription enforcement).
+ * Does NOT require a PlatformContext.
+ */
+export async function recordSystemAction(
+  input: RecordAdminActionInput,
+  tx?: DbClient,
+): Promise<PlatformAuditLog> {
+  return insertPlatformAuditLog(
+    {
+      actorPlatformUserId: null,
+      actorEmail: 'system',
+      action: input.action,
+      targetType: input.targetType,
+      targetId: input.targetId ?? null,
+      clinicId: input.clinicId ?? null,
+      metadata: input.metadata ?? null,
+    },
+    tx,
+  );
+}
+
+/**
  * Lists platform audit log records with optional filters and pagination.
  *
  * Access rule: Permitted for both `super_admin` and `support` platform roles.

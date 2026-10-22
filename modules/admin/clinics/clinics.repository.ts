@@ -309,6 +309,8 @@ export async function getClinicDetail(
     timezone: clinic.timezone,
     logoUrl: clinic.logoUrl,
     status: clinic.status,
+    suspensionSource: clinic.suspensionSource ?? null,
+    pastDueSince: clinic.pastDueSince ?? null,
     trialEndsAt: clinic.trialEndsAt,
     onboardingCompletedAt: clinic.onboardingCompletedAt,
     createdAt: clinic.createdAt,
@@ -326,14 +328,27 @@ export async function getClinicDetail(
   };
 }
 
+export interface UpdateClinicStatusPatch {
+  suspensionSource?: Clinic['suspensionSource'];
+  pastDueSince?: Date | null;
+}
+
 export async function updateClinicStatus(
   clinicId: string,
   status: ClinicStatus,
+  patch: UpdateClinicStatusPatch = {},
   tx: DbClient = db,
 ): Promise<Clinic> {
+  const setPayload: Partial<Clinic> = {
+    status,
+    updatedAt: new Date(),
+    ...(patch && 'suspensionSource' in patch ? { suspensionSource: patch.suspensionSource } : {}),
+    ...(patch && 'pastDueSince' in patch ? { pastDueSince: patch.pastDueSince } : {}),
+  };
+
   const [updated] = await tx
     .update(clinics)
-    .set({ status, updatedAt: new Date() })
+    .set(setPayload)
     .where(eq(clinics.id, clinicId))
     .returning();
 

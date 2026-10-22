@@ -57,6 +57,8 @@ export interface AdminClinicDetail {
   timezone: string;
   logoUrl: string | null;
   status: ClinicStatus;
+  suspensionSource: import('@/db/schema').ClinicSuspensionSource | null;
+  pastDueSince: Date | null;
   trialEndsAt: Date | null;
   onboardingCompletedAt: Date | null;
   createdAt: Date;

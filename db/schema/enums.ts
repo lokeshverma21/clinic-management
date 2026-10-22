@@ -9,6 +9,12 @@ export const clinicStatusEnum = pgEnum('clinic_status', [
   'canceled',
 ]);
 
+// clinics.suspension_source — tracks whether a suspension was admin-initiated or billing-initiated
+export const clinicSuspensionSourceEnum = pgEnum('clinic_suspension_source', [
+  'admin',
+  'billing',
+]);
+
 // memberships.role — Part 8 covers the full permission mapping per role
 export const membershipRoleEnum = pgEnum('membership_role', [
   'owner',

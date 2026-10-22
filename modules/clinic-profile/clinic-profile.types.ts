@@ -15,6 +15,8 @@ export interface ClinicProfile {
   status: Clinic['status'];
   trialEndsAt: Date | null;
   onboardingCompletedAt: Date | null;
+  suspensionSource: Clinic['suspensionSource'];
+  pastDueSince: Date | null;
 }
 
 /**

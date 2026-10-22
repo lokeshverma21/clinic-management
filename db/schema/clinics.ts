@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, jsonb, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
-import { clinicStatusEnum } from './enums';
+import { clinicStatusEnum, clinicSuspensionSourceEnum } from './enums';
 import type { WeeklyHours } from './shared-types';
 
 /**
@@ -21,6 +21,8 @@ export const clinics = pgTable(
     logoUrl: text('logo_url'),
     operatingHours: jsonb('operating_hours').$type<WeeklyHours>(),
     status: clinicStatusEnum('status').notNull().default('trial'),
+    suspensionSource: clinicSuspensionSourceEnum('suspension_source'),
+    pastDueSince: timestamp('past_due_since', { withTimezone: true }),
     trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
     onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -33,3 +35,4 @@ export const clinics = pgTable(
 
 export type Clinic = typeof clinics.$inferSelect;
 export type NewClinic = typeof clinics.$inferInsert;
+export type ClinicSuspensionSource = NonNullable<Clinic['suspensionSource']>;

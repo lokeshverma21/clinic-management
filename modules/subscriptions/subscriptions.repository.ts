@@ -63,12 +63,80 @@ export async function applyGatewayState(
       .update(subscriptions)
       .set({ ...patch, updatedAt: new Date() })
       .where(and(eq(subscriptions.clinicId, clinicId), eq(subscriptions.id, subscriptionId)));
-    if (clinicStatus) {
-      await tx
-        .update(clinics)
-        .set({ status: clinicStatus, updatedAt: new Date() })
-        .where(eq(clinics.id, clinicId));
+
+    if (!clinicStatus) {
+      return;
     }
+
+    const [current] = await tx
+      .select({
+        status: clinics.status,
+        suspensionSource: clinics.suspensionSource,
+      })
+      .from(clinics)
+      .where(eq(clinics.id, clinicId))
+      .limit(1);
+
+    if (!current) {
+      return;
+    }
+
+    const now = new Date();
+
+    if (current.status === 'suspended') {
+      const source = current.suspensionSource ?? 'admin';
+      if (source === 'admin') {
+        // do NOT change the clinic at all
+        return;
+      }
+
+      if (source === 'billing') {
+        if (clinicStatus === 'active') {
+          await tx
+            .update(clinics)
+            .set({
+              status: 'active',
+              suspensionSource: null,
+              pastDueSince: null,
+              updatedAt: now,
+            })
+            .where(eq(clinics.id, clinicId));
+        } else if (clinicStatus === 'past_due') {
+          // stay 'suspended'
+          return;
+        } else if (clinicStatus === 'canceled') {
+          await tx
+            .update(clinics)
+            .set({
+              status: 'canceled',
+              suspensionSource: null,
+              pastDueSince: null,
+              updatedAt: now,
+            })
+            .where(eq(clinics.id, clinicId));
+        }
+      }
+      return;
+    }
+
+    // Any other current status (trial, active, past_due, canceled)
+    const clinicUpdate: Partial<typeof clinics.$inferInsert> = {
+      status: clinicStatus,
+      updatedAt: now,
+    };
+
+    if (clinicStatus === 'past_due') {
+      if (current.status !== 'past_due') {
+        clinicUpdate.pastDueSince = now;
+      }
+    } else if (clinicStatus === 'active' || clinicStatus === 'canceled') {
+      clinicUpdate.pastDueSince = null;
+    }
+
+    await tx
+      .update(clinics)
+      .set(clinicUpdate)
+      .where(eq(clinics.id, clinicId));
   });
 }
 

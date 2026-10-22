@@ -47,7 +47,10 @@ export function ClinicActions({
   const canSuspend =
     canWrite && (clinic.status === "trial" || clinic.status === "active" || clinic.status === "past_due")
   const canReactivate = canWrite && clinic.status === "suspended"
-  const canExtendTrial = canWrite && clinic.status === "trial"
+  const canExtendTrial =
+    canWrite &&
+    (clinic.status === "trial" ||
+      (clinic.status === "suspended" && clinic.suspensionSource === "billing"))
 
   // 1. Suspend Handler
   const handleSuspend = async () => {

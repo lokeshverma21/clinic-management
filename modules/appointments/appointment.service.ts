@@ -1,6 +1,7 @@
 // src/modules/appointments/appointment.service.ts
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '@/lib/errors/app-error';
 import type { RequestContext } from '@/lib/auth/request-context';
+import { assertClinicWritable } from '@/lib/auth/clinic-access.service';
 import { getPatient } from '@/modules/patients';
 import * as appointmentRepository from './appointment.repository';
 import {
@@ -59,6 +60,7 @@ export async function createAppointment(
   if (ctx.role === 'doctor' && input.doctorMembershipId !== ctx.membershipId) {
     throw new ForbiddenError('FORBIDDEN', 'Doctors can only book appointments for themselves');
   }
+  await assertClinicWritable(ctx);
 
   // Confirms the patient exists and belongs to this clinic — reuses the
   // Patients module's own NotFoundError (Part 5: import from a module's
@@ -125,6 +127,7 @@ export async function updateAppointment(
   if (!existing) throw new NotFoundError('APPOINTMENT_NOT_FOUND', 'Appointment not found');
 
   assertCanModify(ctx, existing);
+  await assertClinicWritable(ctx);
 
   const startTime = input.startTime ? new Date(input.startTime) : existing.startTime;
   const endTime = input.endTime ? new Date(input.endTime) : existing.endTime;
@@ -191,6 +194,7 @@ export async function cancelAppointment(ctx: RequestContext, appointmentId: stri
   if (!existing) throw new NotFoundError('APPOINTMENT_NOT_FOUND', 'Appointment not found');
 
   assertCanModify(ctx, existing);
+  await assertClinicWritable(ctx);
 
   const appointment = await appointmentRepository.updateAppointment(ctx.clinicId, appointmentId, {
     status: 'canceled',

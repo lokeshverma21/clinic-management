@@ -1,6 +1,7 @@
 // modules/billing/billing.service.ts
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/lib/errors/app-error';
 import type { RequestContext } from '@/lib/auth/request-context';
+import { assertClinicWritable } from '@/lib/auth/clinic-access.service';
 import { getPatient } from '@/modules/patients';
 import { getMembershipInClinic } from '@/modules/staff/staff.repository';
 import * as billingRepository from './billing.repository';
@@ -72,6 +73,7 @@ export async function createInvoice(
   input: CreateInvoiceInput,
 ): Promise<InvoiceWithDetails> {
   assertCanWrite(ctx);
+  await assertClinicWritable(ctx);
 
   // 1. Verify Patient belongs to the clinic (throws NotFoundError if not)
   await getPatient(ctx, input.patientId);
@@ -162,6 +164,7 @@ export async function updateInvoice(
   input: UpdateInvoiceInput,
 ): Promise<InvoiceWithDetails> {
   assertCanWrite(ctx);
+  await assertClinicWritable(ctx);
 
   const existing = await billingRepository.getInvoiceById(ctx.clinicId, invoiceId);
   if (!existing) {
@@ -303,6 +306,7 @@ export async function addInvoicePayment(
   paymentMethod: string,
 ): Promise<InvoiceWithDetails> {
   assertCanWrite(ctx);
+  await assertClinicWritable(ctx);
 
   const existing = await billingRepository.getInvoiceById(ctx.clinicId, invoiceId);
   if (!existing) {
@@ -360,6 +364,7 @@ export async function duplicateDraftInvoice(
   invoiceId: string,
 ): Promise<InvoiceWithDetails> {
   assertCanWrite(ctx);
+  await assertClinicWritable(ctx);
 
   const existing = await billingRepository.getInvoiceById(ctx.clinicId, invoiceId);
   if (!existing) {
@@ -412,6 +417,7 @@ export async function duplicateDraftInvoice(
 
 export async function deleteInvoice(ctx: RequestContext, invoiceId: string): Promise<Invoice> {
   assertCanDelete(ctx);
+  await assertClinicWritable(ctx);
 
   const existing = await billingRepository.getInvoiceById(ctx.clinicId, invoiceId);
   if (!existing) {

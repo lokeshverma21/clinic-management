@@ -2,6 +2,9 @@ import 'server-only';
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/lib/errors/app-error';
 import type { RequestContext } from '@/lib/auth/request-context';
+import { assertClinicWritable } from '@/lib/auth/clinic-access.service';
+import { getClinicStatusById } from '@/lib/auth/clinic-access.repository';
+import { READ_ONLY_CLINIC_STATUSES } from '@/lib/policy/subscription-policy';
 import type { Appointment } from '@/db/schema';
 import * as appointmentRepository from '@/modules/appointments/appointment.repository';
 import * as notificationRepository from './notification.repository';
@@ -29,6 +32,8 @@ export async function updateNotificationSettings(
     throw new ForbiddenError('OWNER_ONLY', 'Only the clinic owner can change notification settings');
   }
 
+  await assertClinicWritable(ctx);
+
   const updated = await notificationRepository.updateNotificationSettings(
     ctx.clinicId,
     input.autoEmailRemindersEnabled,
@@ -50,6 +55,7 @@ export async function sendManualAppointmentConfirmationEmail(
   }
 
   assertCanModifyAppointment(ctx, appointment);
+  await assertClinicWritable(ctx);
 
   const ctxEmail = await notificationRepository.getAppointmentEmailContext(ctx.clinicId, appointmentId);
   if (!ctxEmail) {
@@ -81,6 +87,13 @@ export async function processDueNotifications(batchSize = 50): Promise<{ process
 
   for (const notification of due) {
     if (notification.channel !== 'email' || notification.type !== 'reminder_1h') {
+      continue;
+    }
+
+    const clinicStatus = await getClinicStatusById(notification.clinicId);
+    if (clinicStatus && READ_ONLY_CLINIC_STATUSES.includes(clinicStatus)) {
+      await notificationRepository.markNotificationFailed(notification.id, 'CLINIC_READ_ONLY');
+      failed += 1;
       continue;
     }
 

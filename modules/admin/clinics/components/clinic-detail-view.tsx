@@ -11,6 +11,7 @@ import {
   Globe,
   Calendar,
   RotateCw,
+  Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ClinicStatusBadge } from "./clinic-status-badge"
@@ -103,6 +104,11 @@ export function ClinicDetailView({ clinicId, canWrite }: ClinicDetailViewProps) 
                 <span>{clinic.name}</span>
               </h1>
               <ClinicStatusBadge status={clinic.status} />
+              {clinic.status === "suspended" && (
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                  Suspended by: {clinic.suspensionSource === "billing" ? "Billing (automatic)" : "Admin"}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -127,6 +133,12 @@ export function ClinicDetailView({ clinicId, canWrite }: ClinicDetailViewProps) 
                 <Calendar className="h-3 w-3" />
                 Created {format(new Date(clinic.createdAt), "MMM d, yyyy")}
               </span>
+              {clinic.pastDueSince && (
+                <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                  <Clock className="h-3 w-3" />
+                  Past due since {format(new Date(clinic.pastDueSince), "MMM d, yyyy")}
+                </span>
+              )}
             </div>
           </div>
 
