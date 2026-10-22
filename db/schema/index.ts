@@ -14,4 +14,5 @@ export * from './clinicNotificationSettings';
 export * from './invoices';
 export * from './invoiceItems';
 export * from './auditLogs';
+export * from './platformAuditLogs';
 export * from './relations';

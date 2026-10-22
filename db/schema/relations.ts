@@ -12,7 +12,8 @@ import { invoices } from './invoices';
 import { invoiceItems } from './invoiceItems';
 import { auditLogs } from './auditLogs';
 
-// platformUsers deliberately has no relations defined — see platformUsers.ts
+import { platformUsers } from './platformUsers';
+import { platformAuditLogs } from './platformAuditLogs';
 
 export const clinicsRelations = relations(clinics, ({ many, one }) => ({
   memberships: many(memberships),
@@ -21,6 +22,7 @@ export const clinicsRelations = relations(clinics, ({ many, one }) => ({
   notifications: many(notifications),
   invoices: many(invoices),
   auditLogs: many(auditLogs),
+  platformAuditLogs: many(platformAuditLogs),
   subscription: one(subscriptions, {
     fields: [clinics.id],
     references: [subscriptions.clinicId],
@@ -118,3 +120,16 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     references: [memberships.id],
   }),
 }));
+
+export const platformUsersRelations = relations(platformUsers, ({ many }) => ({
+  auditLogs: many(platformAuditLogs),
+}));
+
+export const platformAuditLogsRelations = relations(platformAuditLogs, ({ one }) => ({
+  clinic: one(clinics, { fields: [platformAuditLogs.clinicId], references: [clinics.id] }),
+  actor: one(platformUsers, {
+    fields: [platformAuditLogs.actorPlatformUserId],
+    references: [platformUsers.id],
+  }),
+}));
+

@@ -1,4 +1,4 @@
-CREATE TABLE "clinic_notification_settings" (
+CREATE TABLE IF NOT EXISTS "clinic_notification_settings" (
 	"clinic_id" uuid PRIMARY KEY NOT NULL,
 	"auto_email_reminders_enabled" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
