@@ -6,29 +6,29 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 interface PatientErrorProps {
-  onRetry: () => void;
+  onRetry: () => void
 }
 
 export function PatientError({ onRetry }: PatientErrorProps) {
   return (
-    <Card className="border-destructive/20 bg-destructive/5 shadow-none overflow-hidden">
-      <CardContent className="p-6">
+    <Card className="border-destructive/30 bg-destructive/5 shadow-xs overflow-hidden rounded-lg">
+      <CardContent className="p-8">
         <div className="flex flex-col items-center text-center">
-          <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-4">
-            <AlertCircle size={20} />
+          <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-3">
+            <AlertCircle className="size-5" />
           </div>
-          <h3 className="text-sm font-bold text-destructive uppercase tracking-wider mb-1">Unable to load patients</h3>
-          <p className="text-xs text-destructive/80 max-w-sm mb-4">
-            A connection error occurred while trying to fetch the patient records. Please try again or contact support if the problem persists.
+          <h3 className="text-base font-semibold text-foreground tracking-tight mb-1">Unable to load patients</h3>
+          <p className="text-xs text-muted-foreground max-w-sm mb-4 leading-relaxed">
+            A connection error occurred while trying to fetch the patient records. Please try again.
           </p>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={onRetry}
-            className="gap-2 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="gap-2 text-xs h-9 bg-background border-border/80"
           >
-            <RotateCw size={14} />
-            Retry
+            <RotateCw className="size-3.5" />
+            <span>Try again</span>
           </Button>
         </div>
       </CardContent>

@@ -45,7 +45,7 @@ export function DashboardStatCard({
           )}
         </div>
         <div className="mt-2.5 flex items-baseline gap-2">
-          <span className="text-2xl font-bold tracking-tight text-foreground font-mono">
+          <span className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">
             {value}
           </span>
           {badge}

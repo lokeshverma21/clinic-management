@@ -6,10 +6,11 @@ import {
   Eye, 
   Pencil, 
   XCircle, 
-  CheckCircle2,
-  Mail,
-  Loader2,
+  CheckCircle2, 
+  Mail, 
+  Loader2, 
   MessageCircle,
+  Calendar
 } from "lucide-react"
 import { getWhatsAppUrl } from "@/modules/notifications/channels/whatsapp/whatsapp.service"
 import type { WhatsAppMessageType } from "@/modules/notifications/channels/whatsapp/whatsapp.service"
@@ -29,16 +30,17 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { AppointmentStatusBadge } from "./appointment-status-badge"
+import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
+import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { format } from "date-fns"
 import type { AppointmentWithDetails } from "../appointment.types"
 
 interface AppointmentTableProps {
-  appointments: AppointmentWithDetails[];
-  onViewDetails: (appointment: AppointmentWithDetails) => void;
-  onEdit: (appointment: AppointmentWithDetails) => void;
-  onRefresh: () => void;
+  appointments: AppointmentWithDetails[]
+  onViewDetails: (appointment: AppointmentWithDetails) => void
+  onEdit: (appointment: AppointmentWithDetails) => void
+  onRefresh: () => void
 }
 
 export function AppointmentTable({ 
@@ -66,16 +68,13 @@ export function AppointmentTable({
       patientName: appointment.patient.fullName,
       patientPhone: phone,
       doctorName: appointment.doctor.fullName,
-      // clinicName and clinicTimezone are not available in the client-side list
-      // view — omitted here; the message template falls back gracefully.
-      // Server-side automated sends will always supply them.
       startTime: new Date(appointment.startTime),
       endTime: new Date(appointment.endTime),
       status: appointment.status,
     })
 
     if (!url) {
-      alert("Could not generate a WhatsApp link. Please check the patient\u2019s phone number.")
+      alert("Could not generate a WhatsApp link. Please check the patient's phone number.")
       return
     }
 
@@ -124,6 +123,9 @@ export function AppointmentTable({
   }
 
   const handleCancelAppointment = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to cancel this appointment?")
+    if (!confirmed) return
+
     try {
       const res = await fetch(`/api/appointments/${id}`, {
         method: "DELETE",
@@ -140,127 +142,143 @@ export function AppointmentTable({
 
   if (appointments.length === 0) {
     return (
-      <div className="rounded-lg border border-border/60 p-8 text-center text-sm text-muted-foreground bg-card">
-        No appointments found for the selected criteria.
-      </div>
+      <DashboardEmptyState
+        icon={Calendar}
+        title="No appointments found"
+        description="No appointments match the selected criteria and date."
+        className="my-6"
+      />
     )
   }
 
   return (
-    <div className="rounded-lg border border-border/60 overflow-hidden bg-card">
-      <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-25 py-4">Time</TableHead>
-            <TableHead className="py-4">Patient</TableHead>
-            <TableHead className="py-4">Doctor</TableHead>
-            <TableHead className="py-4">Status</TableHead>
-            <TableHead className="py-4 hidden lg:table-cell">Notes</TableHead>
-            <TableHead className="w-20 text-right py-4"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {appointments.map((apt) => {
-            const timeFormatted = format(new Date(apt.startTime), "hh:mm a")
-            const isCompletedOrCanceled = apt.status === "completed" || apt.status === "canceled"
+    <div className="rounded-lg border border-border/60 overflow-hidden bg-card shadow-xs">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-transparent border-b border-border/60">
+              <TableHead className="w-28 text-xs font-medium text-muted-foreground py-3 pl-4">Time</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground py-3">Patient</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground py-3">Doctor</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground py-3">Status</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground py-3 hidden lg:table-cell">Notes</TableHead>
+              <TableHead className="w-16 text-right py-3 pr-4"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {appointments.map((apt) => {
+              const timeFormatted = format(new Date(apt.startTime), "h:mm a")
+              const isCompletedOrCanceled = apt.status === "completed" || apt.status === "canceled"
 
-            return (
-              <TableRow key={apt.id} className="group hover:bg-muted/30 transition-colors border-border/50">
-                <TableCell className="font-medium align-top py-4">{timeFormatted}</TableCell>
-                <TableCell className="align-top py-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8 border border-border/60">
-                      <AvatarFallback className="text-[10px] bg-primary/5 text-primary">
-                        {apt.patient.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span 
-                        className="font-medium text-sm group-hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => onViewDetails(apt)}
-                      >
-                        {apt.patient.fullName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{apt.patient.phone}</span>
+              return (
+                <TableRow
+                  key={apt.id}
+                  className="group hover:bg-muted/50 transition-colors border-b border-border/40 h-12"
+                >
+                  <TableCell className="align-middle py-3 pl-4 font-medium text-sm text-foreground tabular-nums whitespace-nowrap">
+                    {timeFormatted}
+                  </TableCell>
+                  <TableCell className="align-middle py-3">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar className="size-8 shrink-0 border border-border/60">
+                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-medium">
+                          {apt.patient.fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <button
+                          type="button"
+                          className="font-medium text-sm text-foreground group-hover:text-primary transition-colors text-left truncate cursor-pointer hover:underline"
+                          onClick={() => onViewDetails(apt)}
+                        >
+                          {apt.patient.fullName}
+                        </button>
+                        <span className="text-xs text-muted-foreground tabular-nums">{apt.patient.phone}</span>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell className="align-top py-4">
-                  <span className="text-sm">{apt.doctor.fullName}</span>
-                </TableCell>
-                <TableCell className="align-top py-4">
-                  <AppointmentStatusBadge status={apt.status} />
-                </TableCell>
-                <TableCell className="max-w-xs truncate text-muted-foreground text-sm align-top py-4 hidden lg:table-cell">
-                  {apt.notes || "-"}
-                </TableCell>
-                <TableCell className="text-right align-top py-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                          <MoreHorizontal size={16} />
-                        </Button>
-                      }
-                    />
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem className="gap-2" onClick={() => onViewDetails(apt)}>
-                         <Eye size={16} className="text-muted-foreground" />
-                         View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="gap-2"
-                        disabled={sendingEmailId === apt.id || !apt.patient.email}
-                        onClick={() => handleSendConfirmationEmail(apt)}
-                      >
-                        {sendingEmailId === apt.id ? (
-                          <Loader2 size={16} className="animate-spin text-muted-foreground" />
-                        ) : (
-                          <Mail size={16} className="text-muted-foreground" />
+                  </TableCell>
+                  <TableCell className="align-middle py-3">
+                    <span className="text-sm text-foreground truncate">{apt.doctor.fullName}</span>
+                  </TableCell>
+                  <TableCell className="align-middle py-3">
+                    <StatusBadge type="appointment" status={apt.status} />
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate text-muted-foreground text-sm align-middle py-3 hidden lg:table-cell">
+                    {apt.notes || "—"}
+                  </TableCell>
+                  <TableCell className="text-right align-middle py-3 pr-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-muted-foreground hover:text-foreground"
+                            aria-label="Appointment actions"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem className="gap-2 text-xs" onClick={() => onViewDetails(apt)}>
+                          <Eye className="size-4 text-muted-foreground" />
+                          <span>View details</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2 text-xs"
+                          disabled={sendingEmailId === apt.id || !apt.patient.email}
+                          onClick={() => handleSendConfirmationEmail(apt)}
+                        >
+                          {sendingEmailId === apt.id ? (
+                            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            <Mail className="size-4 text-muted-foreground" />
+                          )}
+                          <span>Send email confirmation</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2 text-xs"
+                          disabled={!apt.patient.phone}
+                          onClick={() => handleOpenWhatsApp("confirmation", apt)}
+                        >
+                          <MessageCircle className="size-4 text-success" />
+                          <span>WhatsApp confirmation</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2 text-xs"
+                          disabled={!apt.patient.phone}
+                          onClick={() => handleOpenWhatsApp("reminder", apt)}
+                        >
+                          <MessageCircle className="size-4 text-success" />
+                          <span>WhatsApp reminder</span>
+                        </DropdownMenuItem>
+                        {!isCompletedOrCanceled && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="gap-2 text-xs" onClick={() => onEdit(apt)}>
+                              <Pencil className="size-4 text-muted-foreground" />
+                              <span>Edit appointment</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 text-xs text-success" onClick={() => handleUpdateStatus(apt.id, "completed")}>
+                              <CheckCircle2 className="size-4 text-success" />
+                              <span>Mark completed</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 text-xs text-destructive focus:text-destructive" onClick={() => handleCancelAppointment(apt.id)}>
+                              <XCircle className="size-4" />
+                              <span>Cancel appointment</span>
+                            </DropdownMenuItem>
+                          </>
                         )}
-                        Send Confirmation Email
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="gap-2"
-                        disabled={!apt.patient.phone}
-                        onClick={() => handleOpenWhatsApp("confirmation", apt)}
-                      >
-                        <MessageCircle size={16} className="text-green-600" />
-                        Send WhatsApp Confirmation
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="gap-2"
-                        disabled={!apt.patient.phone}
-                        onClick={() => handleOpenWhatsApp("reminder", apt)}
-                      >
-                        <MessageCircle size={16} className="text-green-600" />
-                        Send WhatsApp Reminder
-                      </DropdownMenuItem>
-                      {!isCompletedOrCanceled && (
-                        <>
-                          <DropdownMenuItem className="gap-2" onClick={() => onEdit(apt)}>
-                             <Pencil size={16} className="text-muted-foreground" />
-                             Edit Appointment
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="gap-2" onClick={() => handleUpdateStatus(apt.id, "completed")}>
-                             <CheckCircle2 size={16} className="text-green-600" />
-                             Mark Completed
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2 text-destructive" onClick={() => handleCancelAppointment(apt.id)}>
-                             <XCircle size={16} />
-                             Cancel Appointment
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }

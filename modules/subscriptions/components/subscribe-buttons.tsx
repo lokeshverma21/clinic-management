@@ -58,23 +58,28 @@ export function SubscribeButtons() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         {OPTIONS.map((o) => (
-          <div key={o.key} className="rounded-lg border p-4">
-            <p className="text-lg font-medium">{o.name}</p>
-            <p className="mb-3 text-2xl">{o.price}<span className="text-sm"> /month</span></p>
+          <div key={o.key} className="rounded-xl border border-border/60 bg-card p-5 shadow-xs flex flex-col justify-between">
+            <div>
+              <p className="text-base font-semibold text-foreground">{o.name}</p>
+              <p className="my-2 text-2xl font-semibold tabular-nums text-foreground">
+                {o.price}
+                <span className="text-xs font-normal text-muted-foreground"> /month</span>
+              </p>
+            </div>
             <button
               onClick={() => void subscribe(o.key)}
               disabled={loading !== null}
-              className="w-full rounded-md bg-black px-4 py-2 text-white disabled:opacity-50"
+              className="w-full mt-3 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 h-9"
             >
               {loading === o.key ? 'Opening checkout…' : `Choose ${o.name}`}
             </button>
           </div>
         ))}
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-xs text-destructive font-medium">{error}</p>}
     </div>
   );
 }

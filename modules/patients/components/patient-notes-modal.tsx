@@ -108,9 +108,9 @@ export function PatientNotesModal({
         {isAppointment && (
           <div className="bg-muted/40 p-2.5 rounded-lg border border-border/40 text-xs space-y-1">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 tabular-nums">
                 <Calendar className="size-3" />
-                {format(new Date(target.appointment.startTime), "MMM dd, yyyy • hh:mm a")}
+                {format(new Date(target.appointment.startTime), "d MMM yyyy, h:mm a")}
               </span>
               <span className="flex items-center gap-1 font-medium text-foreground">
                 <User className="size-3" />

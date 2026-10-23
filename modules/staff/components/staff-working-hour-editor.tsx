@@ -1,38 +1,39 @@
+// modules/staff/components/staff-working-hour-editor.tsx
 "use client"
 
 import * as React from "react"
-import { Plus, Trash2, Clock } from "lucide-react"
-
+import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { DashboardTimePicker } from "@/components/dashboard/dashboard-time-picker"
 import { cn } from "@/lib/utils"
-
 import type { WorkingHours } from "../staff.types"
 
-type DayKey = keyof WorkingHours
+type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
 
-const DAYS: { key: DayKey; label: string }[] = [
-  { key: "mon", label: "Monday" },
-  { key: "tue", label: "Tuesday" },
-  { key: "wed", label: "Wednesday" },
-  { key: "thu", label: "Thursday" },
-  { key: "fri", label: "Friday" },
-  { key: "sat", label: "Saturday" },
-  { key: "sun", label: "Sunday" },
+const DAYS: { key: DayKey; label: string; short: string }[] = [
+  { key: "mon", label: "Monday", short: "Mon" },
+  { key: "tue", label: "Tuesday", short: "Tue" },
+  { key: "wed", label: "Wednesday", short: "Wed" },
+  { key: "thu", label: "Thursday", short: "Thu" },
+  { key: "fri", label: "Friday", short: "Fri" },
+  { key: "sat", label: "Saturday", short: "Sat" },
+  { key: "sun", label: "Sunday", short: "Sun" },
 ]
 
 interface WorkingHoursEditorProps {
   value: WorkingHours | null
   onChange: (value: WorkingHours | null) => void
   error?: string
+  disabled?: boolean
 }
 
 export function WorkingHoursEditor({
   value,
   onChange,
   error,
+  disabled = false,
 }: WorkingHoursEditorProps) {
   const hours = value ?? {}
 
@@ -42,36 +43,29 @@ export function WorkingHoursEditor({
 
   const handleToggleDay = (day: DayKey, enabled: boolean) => {
     const updated = { ...hours }
-
     if (enabled) {
       updated[day] = ["09:00-17:00"]
     } else {
       delete updated[day]
     }
-
     updateHours(updated)
   }
 
   const handleAddRange = (day: DayKey) => {
     const updated = { ...hours }
-
     updated[day] = [...(updated[day] ?? []), "09:00-17:00"]
-
     updateHours(updated)
   }
 
   const handleRemoveRange = (day: DayKey, index: number) => {
     const updated = { ...hours }
-
     const ranges = [...(updated[day] ?? [])]
     ranges.splice(index, 1)
-
     if (ranges.length === 0) {
       delete updated[day]
     } else {
       updated[day] = ranges
     }
-
     updateHours(updated)
   }
 
@@ -79,39 +73,28 @@ export function WorkingHoursEditor({
     day: DayKey,
     index: number,
     type: "start" | "end",
-    value: string
+    newTime: string
   ) => {
     const updated = { ...hours }
-
     const ranges = [...(updated[day] ?? [])]
+    const current = ranges[index] || "09:00-17:00"
+    const [start, end] = current.split("-")
 
-    const [start, end] = ranges[index].split("-")
-
-    ranges[index] =
-      type === "start"
-        ? `${value}-${end}`
-        : `${start}-${value}`
-
+    ranges[index] = type === "start" ? `${newTime}-${end}` : `${start}-${newTime}`
     updated[day] = ranges
-
     updateHours(updated)
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Working Hours
+          Weekly Working Hours
         </Label>
-
-        {error && (
-          <p className="text-xs font-medium text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <p className="text-xs font-medium text-destructive">{error}</p>}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-card/30">
+      <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-xs">
         <div className="divide-y divide-border/40">
           {DAYS.map((day) => {
             const enabled = !!hours[day.key]
@@ -120,124 +103,108 @@ export function WorkingHoursEditor({
             return (
               <div
                 key={day.key}
-                className="space-y-3 p-4 transition-colors hover:bg-muted/30"
+                className={cn(
+                  "p-3.5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 transition-colors",
+                  enabled ? "bg-card" : "bg-muted/15"
+                )}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-lg border text-[11px] font-bold uppercase",
-                        enabled
-                          ? "border-primary/20 bg-primary/10 text-primary"
-                          : "border-border/60 bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {day.key.slice(0, 2)}
-                    </div>
-
+                {/* Day label and toggle */}
+                <div className="flex items-center justify-between sm:justify-start gap-3 sm:w-44 shrink-0 pt-1">
+                  <Switch
+                    checked={enabled}
+                    disabled={disabled}
+                    onCheckedChange={(checked) => handleToggleDay(day.key, checked)}
+                    aria-label={`Toggle ${day.label}`}
+                  />
+                  <div className="flex items-baseline gap-1.5">
                     <span
                       className={cn(
                         "text-sm font-medium",
-                        enabled
-                          ? "text-foreground"
-                          : "text-muted-foreground"
+                        enabled ? "text-foreground" : "text-muted-foreground"
                       )}
                     >
                       {day.label}
                     </span>
+                    {!enabled && (
+                      <span className="text-[11px] text-muted-foreground italic sm:hidden">
+                        (Closed)
+                      </span>
+                    )}
                   </div>
-
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={(checked) =>
-                      handleToggleDay(day.key, checked)
-                    }
-                  />
                 </div>
 
-                {enabled ? (
-                  <div className="space-y-2 pl-11">
-                    {ranges.map((range, index) => {
-                      const [start, end] = range.split("-")
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2"
-                        >
-                          <div className="relative flex-1 max-w-[140px]">
-                            <Clock className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-
-                            <Input
-                              type="time"
-                              value={start}
-                              onChange={(e) =>
-                                handleUpdateRange(
-                                  day.key,
-                                  index,
-                                  "start",
-                                  e.target.value
-                                )
-                              }
-                              className="h-9 bg-background pl-8 text-xs"
-                            />
-                          </div>
-
-                          <span className="text-xs text-muted-foreground">
-                            —
-                          </span>
-
-                          <div className="relative flex-1 max-w-[140px]">
-                            <Clock className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-
-                            <Input
-                              type="time"
-                              value={end}
-                              onChange={(e) =>
-                                handleUpdateRange(
-                                  day.key,
-                                  index,
-                                  "end",
-                                  e.target.value
-                                )
-                              }
-                              className="h-9 bg-background pl-8 text-xs"
-                            />
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            onClick={() =>
-                              handleRemoveRange(day.key, index)
-                            }
+                {/* Working hours slots */}
+                <div className="flex-1 min-w-0">
+                  {enabled ? (
+                    <div className="space-y-2">
+                      {ranges.map((range, index) => {
+                        const [start = "09:00", end = "17:00"] = range.split("-")
+                        return (
+                          <div
+                            key={index}
+                            className="flex flex-wrap items-center gap-2"
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )
-                    })}
+                            <div className="w-[180px]">
+                              <DashboardTimePicker
+                                value={start}
+                                onChange={(val) =>
+                                  handleUpdateRange(day.key, index, "start", val)
+                                }
+                                disabled={disabled}
+                                ariaLabel={`${day.label} start time slot ${index + 1}`}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground select-none px-0.5">
+                              to
+                            </span>
+                            <div className="w-[180px]">
+                              <DashboardTimePicker
+                                value={end}
+                                onChange={(val) =>
+                                  handleUpdateRange(day.key, index, "end", val)
+                                }
+                                disabled={disabled}
+                                ariaLabel={`${day.label} end time slot ${index + 1}`}
+                              />
+                            </div>
 
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      className="h-auto gap-1 p-0 text-[11px] font-semibold"
-                      onClick={() => handleAddRange(day.key)}
-                    >
-                      <Plus className="h-3 w-3" />
-                      Add Time Slot
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="pl-11">
-                    <p className="text-[11px] italic text-muted-foreground">
-                      Not Available
-                    </p>
-                  </div>
-                )}
+                            {!disabled && ranges.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleRemoveRange(day.key, index)}
+                                aria-label={`Remove slot ${index + 1} for ${day.label}`}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      })}
+
+                      {!disabled && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground gap-1"
+                          onClick={() => handleAddRange(day.key)}
+                        >
+                          <Plus className="size-3" />
+                          <span>Add slot</span>
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="py-1">
+                      <span className="text-xs text-muted-foreground italic hidden sm:inline">
+                        Closed
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}

@@ -15,21 +15,22 @@ export function ClinicProfileError({
   onRetry 
 }: ClinicProfileErrorProps) {
   return (
-    <Card className="border-destructive/20 bg-destructive/5 shadow-none">
-      <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-        <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-          <AlertCircle className="h-6 w-6 text-destructive" />
+    <Card className="border-destructive/20 bg-destructive/5 rounded-xl shadow-xs">
+      <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+        <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+          <AlertCircle className="size-5 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">Something went wrong</h3>
-        <p className="text-sm text-muted-foreground max-w-xs mb-6">
+        <h3 className="text-base font-semibold text-foreground mb-1">Failed to load clinic profile</h3>
+        <p className="text-xs text-muted-foreground max-w-sm mb-5 leading-relaxed">
           {message}
         </p>
         <Button 
           variant="outline" 
           onClick={onRetry}
-          className="gap-2 border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
+          size="sm"
+          className="gap-2 h-9 text-xs border-border/60 hover:bg-muted"
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className="size-3.5" />
           Retry
         </Button>
       </CardContent>

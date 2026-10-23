@@ -3,30 +3,28 @@
 import * as React from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header"
 
 interface BillingHeaderProps {
-  onCreateInvoice: () => void;
-  readOnly?: boolean;
+  onCreateInvoice: () => void
+  readOnly?: boolean
 }
 
 export function BillingHeader({ onCreateInvoice, readOnly }: BillingHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Billing & Invoices</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Create invoices, track payments, and manage clinic revenue.
-        </p>
-      </div>
+    <DashboardPageHeader
+      title="Billing & Invoices"
+      description="Create invoices, track payments, and manage clinic revenue."
+    >
       {!readOnly && (
         <Button
           onClick={onCreateInvoice}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+          className="gap-2 shadow-xs"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          New Invoice
+          <Plus className="size-4" />
+          <span>New Invoice</span>
         </Button>
       )}
-    </div>
+    </DashboardPageHeader>
   )
 }

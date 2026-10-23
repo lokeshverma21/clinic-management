@@ -97,7 +97,7 @@ export default function PatientsPage() {
 
   if (isLoading && patients.length === 0) {
     return (
-      <div className="container p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <PatientLoading />
       </div>
     )
@@ -105,7 +105,7 @@ export default function PatientsPage() {
 
   if (hasError) {
     return (
-      <div className="container p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         <PatientHeader onAddPatient={handleAddPatient} />
         <PatientError onRetry={loadPatients} />
       </div>
@@ -116,7 +116,7 @@ export default function PatientsPage() {
   const showEmptyState = patients.length === 0 && !isFiltered
 
   return (
-    <div className="container p-4 sm:p-6 lg:p-2 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       <PatientHeader onAddPatient={handleAddPatient} />
       
       <PatientStats total={total} />

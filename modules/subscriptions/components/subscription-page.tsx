@@ -3,7 +3,6 @@
 import * as React from "react";
 import Script from "next/script";
 import {
-  AlertCircle,
   Check,
   CheckCircle2,
   Clock3,
@@ -11,7 +10,6 @@ import {
   Pause,
   RefreshCcw,
   XCircle,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +41,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
+import { StatusBadge } from "@/components/dashboard/dashboard-status-badge";
+import { cn } from "@/lib/utils";
 import type {
   Subscription,
   SubscriptionHistoryItem,
@@ -77,17 +77,6 @@ type ApiResponse<T> = {
   success: boolean;
   data?: T;
   error?: { message?: string };
-};
-
-const statusStyle: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  active: "default",
-  trialing: "secondary",
-  paused: "secondary",
-  past_due: "destructive",
-  canceled: "destructive",
 };
 
 // UI Mapping for features (Logic friendly)
@@ -154,6 +143,7 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
   }, []);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 
@@ -225,28 +215,23 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
   return (
     <>
       <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
-      <div className="mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Subscription & Billing</h1>
-            <p className="text-muted-foreground">
-              Manage your clinic&apos;s growth and billing preferences.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <DashboardPageHeader
+          title="Subscription & Billing"
+          description="Manage your clinic's subscription tier, plan limits, and billing history."
+        >
           {subscription && (
-             <Badge variant="outline" className="w-fit px-3 py-1 text-sm font-medium border-primary/20 bg-primary/5">
-                Current Plan: <span className="ml-1 capitalize text-primary">{subscription.plan}</span>
-             </Badge>
+            <Badge variant="outline" className="px-2.5 py-1 text-xs font-medium border-primary/20 bg-primary/5">
+              Current Plan: <span className="ml-1 capitalize font-semibold text-primary">{subscription.plan}</span>
+            </Badge>
           )}
-        </div>
-
-        {/* <Separator /> */}
+        </DashboardPageHeader>
 
         {callback && (
-          <Alert className="border-primary/20 bg-primary/5">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            <AlertTitle>Authorization received</AlertTitle>
-            <AlertDescription>
+          <Alert className="border-primary/20 bg-primary/5 text-foreground">
+            <CheckCircle2 className="size-4 text-primary" />
+            <AlertTitle className="text-sm font-semibold">Authorization received</AlertTitle>
+            <AlertDescription className="text-xs text-muted-foreground mt-1">
               {subscription?.status === "active"
                 ? "Your subscription is active."
                 : "We are confirming your mandate. This page will update shortly."}
@@ -255,15 +240,15 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
         )}
 
         {isCancelledScheduled && (
-          <Alert className="border-amber-500/20 bg-amber-500/5">
-            <Clock3 className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800 dark:text-amber-400 font-semibold">
+          <Alert className="border-warning/30 bg-warning/10 text-warning">
+            <Clock3 className="size-4 text-warning" />
+            <AlertTitle className="text-sm font-semibold text-foreground">
               Cancellation scheduled
             </AlertTitle>
             <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-              <span className="text-amber-900/90 dark:text-amber-300">
+              <span className="text-xs text-muted-foreground">
                 Your plan is set to cancel on{" "}
-                <b className="underline">
+                <b className="text-foreground underline">
                   {subscription?.currentPeriodEnd
                     ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", { dateStyle: 'long' })
                     : "end of period"}
@@ -273,11 +258,11 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
               <Button
                 size="sm"
                 variant="outline"
-                className="bg-white border-amber-500/30 text-amber-900 hover:bg-amber-100 shrink-0"
+                className="border-warning/40 text-foreground hover:bg-warning/10 shrink-0 h-8 text-xs"
                 disabled={busy !== null}
                 onClick={() => void runManage("uncancel")}
               >
-                <RefreshCcw className="mr-2 h-3.5 w-3.5" />
+                <RefreshCcw className="mr-1.5 size-3.5" />
                 {busy === "uncancel" ? "Reactivating…" : "Keep Subscription"}
               </Button>
             </AlertDescription>
@@ -285,20 +270,21 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
         )}
 
         {subscription && (
-          <Card className="overflow-hidden border-primary/1">
-            <div className="p-6 md:flex items-center justify-between gap-6">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                   <CreditCard className="h-5 w-5 text-primary" />
-                   <h3 className="text-xl font-bold capitalize">{subscription.plan} Plan</h3>
-                   <Badge
-                    variant={isCancelledScheduled ? "outline" : statusStyle[subscription.status] ?? "outline"}
-                    className={isCancelledScheduled ? "border-amber-500 text-amber-700" : ""}
-                  >
-                    {isCancelledScheduled ? "Expiring Soon" : subscription.status.replace("_", " ")}
-                  </Badge>
+          <Card className="rounded-xl border-border/60 bg-card p-5 shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <CreditCard className="size-5 text-primary" />
+                  <h3 className="text-lg font-semibold capitalize tracking-tight text-foreground">
+                    {subscription.plan} Plan
+                  </h3>
+                  <StatusBadge
+                    type="subscription"
+                    status={isCancelledScheduled ? "canceled" : subscription.status}
+                    label={isCancelledScheduled ? "Expiring Soon" : undefined}
+                  />
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground tabular-nums">
                   {subscription.status === "trialing" && `Trial ends ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}`}
                   {subscription.status === "active" && !isCancelledScheduled && `Renews on ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}`}
                   {subscription.status === "active" && isCancelledScheduled && `Access until ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}`}
@@ -306,19 +292,19 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                 </p>
               </div>
 
-              <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 {subscription.status === "paused" && (
-                  <Button variant="default" size="sm" disabled={busy !== null} onClick={() => void runManage("resume")}>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
+                  <Button variant="default" size="sm" className="h-9 text-xs" disabled={busy !== null} onClick={() => void runManage("resume")}>
+                    <RefreshCcw className="mr-1.5 size-3.5" />
                     {busy === "resume" ? "Resuming…" : "Resume Plan"}
                   </Button>
                 )}
                 {subscription.status === "active" && !isCancelledScheduled && (
                   <>
-                    <Button variant="outline" size="sm" disabled={busy !== null} onClick={() => setConfirmAction("pause")}>
-                      <Pause className="mr-2 h-4 w-4" /> Pause
+                    <Button variant="outline" size="sm" className="h-9 text-xs" disabled={busy !== null} onClick={() => setConfirmAction("pause")}>
+                      <Pause className="mr-1.5 size-3.5" /> Pause
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" disabled={busy !== null} onClick={() => setConfirmAction("cancel")}>
+                    <Button variant="ghost" size="sm" className="h-9 text-xs text-destructive hover:bg-destructive/10" disabled={busy !== null} onClick={() => setConfirmAction("cancel")}>
                       Cancel Plan
                     </Button>
                   </>
@@ -328,10 +314,10 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
           </Card>
         )}
 
-        <div className="space-y-6 my-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold">Choose the right plan for your clinic</h2>
-            <p className="text-muted-foreground">Upgrade or switch plans anytime.</p>
+        <div className="space-y-4 pt-2">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Choose the right plan for your clinic</h2>
+            <p className="text-xs text-muted-foreground">Upgrade, adjust tiers, or switch billing preferences anytime.</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -342,56 +328,76 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
               return (
                 <Card
                   key={plan.id}
-                  className={`relative flex flex-col transition-all duration-300 ${
-                    isCurrent ? "border-primary shadow-lg scale-[1.02]" : "border-border/60 hover:border-primary/50"
-                  } ${details.popular ? "md:-mt-2 md:mb-2 border-primary/40" : ""}`}
-                >
-                  {details.popular && (
-                    <div className="absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                      Most Chosen
-                    </div>
+                  className={cn(
+                    "relative flex flex-col justify-between rounded-xl shadow-xs transition-colors",
+                    isCurrent
+                      ? "border-primary ring-1 ring-primary/30 bg-card"
+                      : "border-border/60 bg-card hover:border-border"
                   )}
-                  <CardHeader className="pt-6">
-                    <CardTitle className="flex items-center justify-between text-xl capitalize">
-                      {plan.name}
-                      {isCurrent && <Badge variant="secondary">Current</Badge>}
-                    </CardTitle>
-                    <CardDescription className="min-h-[40px] mt-2">{details.desc}</CardDescription>
-                    <div className="pt-4">
-                      <span className="text-3xl font-bold">
-                        {plan.amount === null ? "Custom" : `₹${plan.amount.toLocaleString("en-IN")}`}
-                      </span>
-                      {plan.amount !== null && <span className="text-muted-foreground text-sm ml-1">/month</span>}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <ul className="space-y-2.5 text-sm">
-                      {details.features.map((feat, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  <CardFooter>
+                >
+                  <div>
+                    <CardHeader className="p-5 pb-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-base font-semibold capitalize text-foreground">
+                          {plan.name}
+                        </CardTitle>
+                        {isCurrent ? (
+                          <Badge variant="outline" className="text-[11px] font-semibold border-primary/30 text-primary bg-primary/5">
+                            Current
+                          </Badge>
+                        ) : details.popular ? (
+                          <Badge variant="outline" className="text-[11px] font-semibold border-border bg-muted/60 text-muted-foreground">
+                            Recommended
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <CardDescription className="text-xs text-muted-foreground min-h-[32px] mt-1.5 leading-relaxed">
+                        {details.desc}
+                      </CardDescription>
+                      <div className="pt-3 flex items-baseline gap-1">
+                        <span className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">
+                          {plan.amount === null
+                            ? "Custom"
+                            : new Intl.NumberFormat("en-IN", {
+                                style: "currency",
+                                currency: "INR",
+                                maximumFractionDigits: 0,
+                              }).format(plan.amount)}
+                        </span>
+                        {plan.amount !== null && (
+                          <span className="text-xs text-muted-foreground font-normal">/ month</span>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-5 pt-2">
+                      <ul className="space-y-2 text-xs">
+                        {details.features.map((feat, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <Check className="size-3.5 text-primary mt-0.5 shrink-0" />
+                            <span className="text-foreground/90">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </div>
+                  <CardFooter className="p-5 pt-0">
                     {plan.selfServe ? (
                       <Button
-                        className="w-full font-semibold"
-                        variant={details.popular ? "default" : "outline"}
+                        className="w-full h-9 text-xs font-medium"
+                        variant={details.popular && !isCurrent ? "default" : "outline"}
                         disabled={busy !== null || isCurrent}
                         onClick={() => void start(plan.id as "starter" | "professional")}
                       >
                         {busy === plan.id ? (
-                          <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                          <RefreshCcw className="mr-1.5 size-3.5 animate-spin" />
                         ) : isCurrent ? (
-                          "Active Now"
+                          "Current Plan"
                         ) : (
-                          "Select Plan"
+                          `Select ${plan.name}`
                         )}
                       </Button>
                     ) : (
-                      <Button className="w-full" variant="outline" disabled>
+                      <Button className="w-full h-9 text-xs font-medium" variant="outline" disabled>
                         Contact Sales
                       </Button>
                     )}
@@ -402,33 +408,31 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Billing History</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Billing History</h2>
           </div>
-          <Card className="border-border/60 overflow-hidden">
+          <Card className="border-border/60 rounded-xl bg-card shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead className="w-[200px]">Transaction ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Processed On</TableHead>
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="h-10 border-b border-border/40">
+                    <TableHead className="w-[240px] text-xs font-medium text-muted-foreground">Transaction ID</TableHead>
+                    <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-right text-xs font-medium text-muted-foreground">Processed On</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className="divide-y divide-border/40">
                   {data?.history.length ? (
                     data.history.map((event) => (
-                      <TableRow key={event.eventId}>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
+                      <TableRow key={event.eventId} className="h-12 hover:bg-muted/40 transition-colors">
+                        <TableCell className="text-xs text-muted-foreground tabular-nums">
                           {event.eventId}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="capitalize font-normal">
-                            {event.status}
-                          </Badge>
+                          <StatusBadge type="subscription" status={event.status} />
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground text-sm">
+                        <TableCell className="text-right text-muted-foreground text-xs tabular-nums">
                           {new Date(event.processedAt).toLocaleString("en-IN", {
                             dateStyle: "medium",
                             timeStyle: "short",
@@ -439,9 +443,9 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                           <Clock3 className="h-8 w-8 opacity-20" />
-                           <p>No billing events found.</p>
+                        <div className="flex flex-col items-center justify-center gap-1.5 py-6">
+                           <Clock3 className="size-6 text-muted-foreground/40" />
+                           <p className="text-xs text-muted-foreground">No billing events found.</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -454,21 +458,26 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
       </div>
 
       <AlertDialog open={confirmAction !== null} onOpenChange={(open) => !open && setConfirmAction(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-xl border-border/60">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-semibold">
               {confirmAction === "cancel" ? "Schedule cancellation?" : "Pause subscription?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
               {confirmAction === "cancel"
                 ? "Your subscription will remain active until the end of your current billing period. You'll lose access to premium features after that date."
                 : "Your plan will be paused immediately. You can resume it anytime to pick up where you left off."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Go Back</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="h-9 text-xs">Go Back</AlertDialogCancel>
             <AlertDialogAction
-              className={confirmAction === "cancel" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+              className={cn(
+                "h-9 text-xs",
+                confirmAction === "cancel"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              )}
               onClick={() => confirmAction && void runManage(confirmAction)}
               disabled={busy !== null}
             >
@@ -481,16 +490,16 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
   );
 }
 
-// --- Loading & Error States (Enhanced UI) ---
+// --- Loading & Error States ---
 
 function SubscriptionLoading() {
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-pulse">
+    <div className="space-y-6 animate-pulse">
       <div className="space-y-2">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-8 w-64 rounded-md" />
+        <Skeleton className="h-4 w-96 rounded-md" />
       </div>
-      <Skeleton className="h-28 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
       <div className="grid gap-6 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-96 rounded-xl" />
@@ -502,16 +511,16 @@ function SubscriptionLoading() {
 
 function SubscriptionError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="max-w-2xl mx-auto mt-20">
-      <Card className="border-destructive/20 bg-destructive/5 shadow-lg">
-        <CardContent className="flex flex-col items-center p-12 text-center">
-          <div className="rounded-full bg-destructive/10 p-4 mb-4">
-            <XCircle className="h-10 w-10 text-destructive" />
+    <div className="max-w-md mx-auto pt-12">
+      <Card className="border-destructive/20 bg-destructive/5 rounded-xl shadow-xs">
+        <CardContent className="flex flex-col items-center p-8 text-center">
+          <div className="rounded-full bg-destructive/10 p-3 mb-3">
+            <XCircle className="size-8 text-destructive" />
           </div>
-          <h2 className="text-xl font-bold">Something went wrong</h2>
-          <p className="mt-2 text-muted-foreground">{message}</p>
-          <Button className="mt-8" variant="default" onClick={onRetry}>
-            <RefreshCcw className="mr-2 h-4 w-4" />
+          <h2 className="text-base font-semibold text-foreground">Failed to load subscription</h2>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{message}</p>
+          <Button className="mt-6 h-9 text-xs" variant="outline" onClick={onRetry}>
+            <RefreshCcw className="mr-1.5 size-3.5" />
             Try Again
           </Button>
         </CardContent>

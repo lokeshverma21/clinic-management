@@ -1,3 +1,4 @@
+// modules/staff/components/staff-deactivate-dialog.tsx
 "use client"
 
 import * as React from "react"
@@ -7,7 +8,6 @@ import {
   Archive,
   CalendarClock,
 } from "lucide-react"
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,16 +18,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface DeactivateStaffDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-
   membershipId: string
   staffName: string
-
   onSuccess?: () => void
 }
 
@@ -78,48 +76,43 @@ export function DeactivateStaffDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md rounded-xl border-border/60">
-        <AlertDialogHeader>
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-            <Archive className="h-6 w-6 text-destructive" />
+      <AlertDialogContent className="max-w-md rounded-xl border-border/60 p-6">
+        <AlertDialogHeader className="space-y-3">
+          <div className="flex size-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <Archive className="size-5" />
           </div>
 
-          <AlertDialogTitle>
-            Deactivate Staff Member
+          <AlertDialogTitle className="text-lg font-semibold tracking-tight text-foreground">
+            Deactivate staff member
           </AlertDialogTitle>
 
-          <AlertDialogDescription className="space-y-3 text-sm leading-relaxed">
+          <AlertDialogDescription className="space-y-2 text-xs text-muted-foreground leading-relaxed text-left">
             <p>
               Are you sure you want to deactivate{" "}
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-foreground">
                 {staffName}
               </span>
               ?
             </p>
-
-            <p>
-              This staff member will no longer be able to access the clinic,
-              but their historical records, appointments and audit history
-              will remain intact.
+            <p className="p-3 rounded-lg bg-muted/40 border border-border/60 text-muted-foreground">
+              <strong>Consequences:</strong> The member will immediately lose access to ClinicSeva.
+              Their past consultations, patient history, notes, and audit records will remain completely intact.
             </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         {warning !== null && (
-          <div className="rounded-lg border border-amber-300/40 bg-amber-500/10 p-4">
-            <div className="flex gap-3">
-              <CalendarClock className="mt-0.5 h-5 w-5 text-amber-600" />
-
-              <div>
-                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+          <div className="rounded-lg border border-warning/25 bg-warning/10 p-3.5 mt-2">
+            <div className="flex gap-2.5 items-start">
+              <CalendarClock className="size-4 text-warning shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-warning">
                   Upcoming appointments found
                 </p>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  This staff member still has{" "}
-                  <strong>{warning}</strong> upcoming appointment
-                  {warning > 1 ? "s" : ""}.
-                  Reassign or cancel them if necessary.
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  This staff member has{" "}
+                  <strong className="text-foreground">{warning}</strong> upcoming appointment
+                  {warning > 1 ? "s" : ""}. Please reassign or reschedule them as needed.
                 </p>
               </div>
             </div>
@@ -127,46 +120,39 @@ export function DeactivateStaffDialog({
         )}
 
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-            <div className="flex gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
-
-              <p className="text-sm text-destructive">
-                {error}
-              </p>
-            </div>
+          <div className="rounded-lg border border-destructive/25 bg-destructive/10 p-3 mt-2 flex items-start gap-2">
+            <AlertTriangle className="size-4 text-destructive shrink-0 mt-0.5" />
+            <p className="text-xs font-medium text-destructive leading-relaxed">{error}</p>
           </div>
         )}
 
-        <AlertDialogFooter className="pt-2">
+        <AlertDialogFooter className="pt-3 gap-2">
           <AlertDialogCancel
             disabled={loading}
-            className="h-10"
+            className="h-9 text-xs"
           >
             Cancel
           </AlertDialogCancel>
 
-          <AlertDialogAction               
-              onClick={handleDeactivate}
-              disabled={loading}
-              className="h-10"  >
-            {/* <Button */}
-              {/* variant="destructive" */}
-
-              {/* className="h-10" */}
-            {/* > */}
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deactivating...
-                </>
-              ) : (
-                <>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Deactivate Staff
-                </>
-              )}
-            {/* </Button> */}
+          <AlertDialogAction
+            onClick={handleDeactivate}
+            disabled={loading}
+            className={cn(
+              buttonVariants({ variant: "destructive", size: "sm" }),
+              "h-9 text-xs gap-1.5"
+            )}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                <span>Deactivating...</span>
+              </>
+            ) : (
+              <>
+                <Archive className="size-3.5" />
+                <span>Deactivate member</span>
+              </>
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
