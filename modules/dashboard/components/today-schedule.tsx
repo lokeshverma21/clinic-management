@@ -1,4 +1,6 @@
-// /app/(dashboard)/dashboard/_components/today-schedule.tsx
+import * as React from 'react';
+import Link from 'next/link';
+import { Calendar, ArrowRight, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,35 +18,64 @@ interface TodayScheduleProps {
   appointments: DashboardAppointment[];
 }
 
-/**
- * Maps every possible appointment status to a Shadcn Badge variant.
- * Using a Record with the full AppointmentStatus union ensures TypeScript
- * will error if a new status is added to the enum without updating this map.
- */
-const STATUS_VARIANT: Record<
-  AppointmentStatus,
-  'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-  booked: 'secondary',
-  confirmed: 'outline',
-  completed: 'default',
-  canceled: 'destructive',
-  no_show: 'destructive',
-};
-
-const STATUS_LABEL: Record<AppointmentStatus, string> = {
-  booked: 'Booked',
-  confirmed: 'Confirmed',
-  completed: 'Completed',
-  canceled: 'Canceled',
-  no_show: 'No Show',
-};
+function StatusBadge({ status }: { status: AppointmentStatus }) {
+  switch (status) {
+    case 'completed':
+      return (
+        <Badge
+          variant="default"
+          className="bg-emerald-600 hover:bg-emerald-600/90 text-white font-mono text-[11px] capitalize"
+        >
+          Completed
+        </Badge>
+      );
+    case 'confirmed':
+      return (
+        <Badge
+          variant="outline"
+          className="bg-primary/10 text-primary border-primary/30 font-mono text-[11px] capitalize"
+        >
+          Confirmed
+        </Badge>
+      );
+    case 'booked':
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-muted text-muted-foreground border-border font-mono text-[11px] capitalize"
+        >
+          Booked
+        </Badge>
+      );
+    case 'canceled':
+      return (
+        <Badge
+          variant="destructive"
+          className="bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 font-mono text-[11px] capitalize"
+        >
+          Canceled
+        </Badge>
+      );
+    case 'no_show':
+      return (
+        <Badge
+          variant="destructive"
+          className="bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 font-mono text-[11px] capitalize"
+        >
+          No Show
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="font-mono text-[11px] capitalize">
+          {status}
+        </Badge>
+      );
+  }
+}
 
 /**
  * Formats a UTC ISO string to an HH:MM display string.
- * Uses 'en-GB' locale for unambiguous 24-hour output.
- * The conversion to local time is intentional — the server stores UTC,
- * the browser renders in the user's local timezone.
  */
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-IN', {
@@ -56,50 +87,73 @@ function formatTime(iso: string): string {
 
 export function TodaySchedule({ appointments }: TodayScheduleProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">
-          {"Today's Schedule"}
-          <span className="text-muted-foreground ml-2 text-sm font-normal">
-            {appointments.length} appointment{appointments.length !== 1 ? 's' : ''}
-          </span>
-        </CardTitle>
+    <Card className="shadow-xs border-border/60 bg-card overflow-hidden">
+      <CardHeader className="py-4 px-5 border-b border-border/40 bg-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Calendar className="size-4 text-primary shrink-0" />
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
+              Today&apos;s Schedule
+            </CardTitle>
+            <Badge
+              variant="secondary"
+              className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-normal"
+            >
+              {appointments.length} {appointments.length === 1 ? 'visit' : 'visits'}
+            </Badge>
+          </div>
+          <Link
+            href="/appointments"
+            className="text-xs text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 transition-colors"
+          >
+            <span>Full schedule</span>
+            <ArrowRight className="size-3" />
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {appointments.length === 0 ? (
-          <p className="text-muted-foreground px-6 py-10 text-center text-sm">
-            No appointments scheduled for today.
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <div className="flex size-10 items-center justify-center rounded-full bg-muted/60 text-muted-foreground mb-2.5">
+              <Clock className="size-5" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No appointments today</p>
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-xs">
+              There are no patient visits scheduled on the calendar for today.
+            </p>
+          </div>
         ) : (
           <ScrollArea className="h-[360px]">
-            <Table className='px-6'>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[90px] px-4">Time</TableHead>
-                  <TableHead className='px-4'>Patient</TableHead>
-                  <TableHead className='px-4'>Doctor</TableHead>
-                  <TableHead className='px-4'>Duration</TableHead>
-                  <TableHead className="text-right px-4">Status</TableHead>
+            <Table>
+              <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-xs">
+                <TableRow className="border-border/50 hover:bg-transparent">
+                  <TableHead className="w-[110px] px-5 text-xs font-semibold text-muted-foreground">Time</TableHead>
+                  <TableHead className="px-4 text-xs font-semibold text-muted-foreground">Patient</TableHead>
+                  <TableHead className="px-4 text-xs font-semibold text-muted-foreground">Doctor</TableHead>
+                  <TableHead className="px-4 text-xs font-semibold text-muted-foreground">Duration</TableHead>
+                  <TableHead className="text-right px-5 text-xs font-semibold text-muted-foreground">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {appointments.map((appt) => (
-                  <TableRow key={appt.id}>
-                    {/* startTime displayed, endTime available for tooltip if needed */}
-                    <TableCell className="font-mono text-sm tabular-nums px-4">
+                  <TableRow
+                    key={appt.id}
+                    className="border-border/40 hover:bg-muted/40 transition-colors"
+                  >
+                    <TableCell className="font-mono text-xs font-medium tabular-nums px-5 text-foreground">
                       {formatTime(appt.startTime)}
                     </TableCell>
-                    <TableCell className="font-medium px-4">{appt.patientName}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm px-4">
+                    <TableCell className="font-medium text-xs px-4 text-foreground">
+                      {appt.patientName}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs px-4">
                       {appt.doctorName}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm tabular-nums px-4">
+                    <TableCell className="text-muted-foreground text-xs tabular-nums px-4">
                       {appt.durationMinutes} min
                     </TableCell>
-                    <TableCell className="text-right px-4">
-                      <Badge variant={STATUS_VARIANT[appt.status]}>
-                        {STATUS_LABEL[appt.status]}
-                      </Badge>
+                    <TableCell className="text-right px-5">
+                      <StatusBadge status={appt.status} />
                     </TableCell>
                   </TableRow>
                 ))}
