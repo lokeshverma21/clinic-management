@@ -26,7 +26,7 @@ export interface AdminNavItem {
 
 export const ADMIN_NAV_CONFIG: AdminNavItem[] = [
   {
-    title: "Overview",
+    title: "Dashboard",
     url: "/admin",
     icon: LayoutDashboard,
   },
