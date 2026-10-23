@@ -1,29 +1,31 @@
+// modules/staff/components/staff-header.tsx
 "use client"
 
 import * as React from "react"
-import { Plus } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header"
 
 interface StaffHeaderProps {
-  onAddStaff: () => void;
+  onAddStaff: () => void
+  canInvite?: boolean
 }
 
-export function StaffHeader({ onAddStaff }: StaffHeaderProps) {
+export function StaffHeader({ onAddStaff, canInvite = true }: StaffHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Staff</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage doctors, receptionists and other clinic staff.
-        </p>
-      </div>
-      <Button 
-        onClick={onAddStaff}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Staff Member
-      </Button>
-    </div>
+    <DashboardPageHeader
+      title="Staff"
+      description="Manage doctors, receptionists, access roles, and clinic schedules."
+    >
+      {canInvite && (
+        <Button
+          onClick={onAddStaff}
+          className="gap-2 shadow-xs"
+        >
+          <UserPlus className="size-4" />
+          <span>Invite staff</span>
+        </Button>
+      )}
+    </DashboardPageHeader>
   )
 }

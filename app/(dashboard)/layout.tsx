@@ -20,9 +20,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-
-  const user = await currentUser()
-  if (!user) redirect("/sign-in")
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
 
   const ctx = await getRequestContext();
 
@@ -30,56 +29,81 @@ export default async function DashboardLayout({
   const notificationSettings = await getNotificationSettings(ctx);
 
   if (!clinic.onboardingCompletedAt) {
-      redirect("/onboarding/clinic");
+    redirect("/onboarding/clinic");
   }
 
   const sidebarUser = {
-    name: `${user.firstName} ${user.lastName}`,
-    email: user.emailAddresses[0].emailAddress,
+    name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "Clinic Member",
+    email: user.emailAddresses[0]?.emailAddress ?? "",
     avatar: user.imageUrl,
-  }
+  };
 
   const sidebarClinic = {
     name: clinic.name,
     logoUrl: clinic.logoUrl,
     plan: clinic.status.toUpperCase(), // e.g., 'TRIAL', 'ACTIVE'
-  }
-  
+  };
+
   return (
     <SidebarProvider>
       <Script
-          src="https://sdk.cashfree.com/js/v3/cashfree.js"
-          strategy="afterInteractive"
+        src="https://sdk.cashfree.com/js/v3/cashfree.js"
+        strategy="afterInteractive"
       />
       <AppSidebar user={sidebarUser} clinic={sidebarClinic} />
 
-      <SidebarInset>
-        <header className="flex h-16 items-center justify-between gap-2 border-b px-4">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger />
+      <SidebarInset className="min-h-screen bg-background flex flex-col">
+        {/* Dashboard Top Header Bar */}
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border/60 bg-card/85 backdrop-blur-md px-4 sm:px-6 transition-colors">
+          <div className="flex items-center gap-2.5">
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors" />
 
             <Separator
               orientation="vertical"
-              className="h-4"
+              className="h-4 bg-border/70"
             />
 
-            {/* Later you can add breadcrumbs, search, profile, etc. */}
-            <h1 className="font-medium">ClinicSeva</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold tracking-tight text-foreground font-sans">
+                ClinicSeva
+              </span>
+              <span className="text-muted-foreground/60 text-xs hidden sm:inline">
+                /
+              </span>
+              <span className="text-xs text-muted-foreground hidden sm:inline font-medium">
+                {clinic.name}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-3.5">
             <AutoEmailRemindersToggle
               initialEnabled={notificationSettings.autoEmailRemindersEnabled}
               canEdit={ctx.role === "owner"}
             />
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
+            <Separator
+              orientation="vertical"
+              className="h-4 bg-border/60 hidden sm:block"
+            />
+            <div className="flex items-center">
+              <Show when="signed-in">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "size-8 ring-1 ring-border/80 shadow-xs",
+                    },
+                  }}
+                />
+              </Show>
+            </div>
           </div>
         </header>
 
+        {/* Status / Suspension / Grace Banner */}
         <ClinicStatusBanner clinic={clinic} />
 
-        <main className="flex-1 p-6">
+        {/* Dashboard Content Container */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-300">
           {children}
         </main>
       </SidebarInset>

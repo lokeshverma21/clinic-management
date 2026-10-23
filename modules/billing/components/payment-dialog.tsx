@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { CreditCard, IndianRupee, Wallet } from "lucide-react"
+import { CreditCard, IndianRupee } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -15,14 +15,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import type { InvoiceWithDetails } from "../billing.types"
 
 interface PaymentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  invoice: InvoiceWithDetails | null;
-  onSuccess?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  invoice: InvoiceWithDetails | null
+  onSuccess?: () => void
 }
 
 export function PaymentDialog({ open, onOpenChange, invoice, onSuccess }: PaymentDialogProps) {
@@ -34,7 +33,6 @@ export function PaymentDialog({ open, onOpenChange, invoice, onSuccess }: Paymen
   // Sync initial state when open updates
   React.useEffect(() => {
     if (open && invoice) {
-      // Defer state updates to prevent cascading render error
       const timeoutId = window.setTimeout(() => {
         setAmount(parseFloat(invoice.balanceDue).toFixed(2))
         setMethod(invoice.paymentMethod || "Cash")
@@ -45,7 +43,7 @@ export function PaymentDialog({ open, onOpenChange, invoice, onSuccess }: Paymen
     }
   }, [open, invoice])
 
-  if (!invoice) return null;
+  if (!invoice) return null
 
   const currentBalance = parseFloat(invoice.balanceDue)
 
@@ -82,41 +80,42 @@ export function PaymentDialog({ open, onOpenChange, invoice, onSuccess }: Paymen
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-border/50 rounded-xl shadow-lg flex flex-col max-h-[90vh]">
-        <DialogHeader className="p-6 pb-0 shrink-0">
-          <DialogTitle className="text-lg flex items-center gap-2">
-            <Wallet className="text-emerald-500" size={20} />
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-border/60 rounded-xl shadow-lg flex flex-col max-h-[90vh]">
+        <DialogHeader className="p-6 pb-4 border-b border-border/40 shrink-0">
+          <DialogTitle className="text-xl font-semibold tracking-tight">
             Record Payment
           </DialogTitle>
-          <DialogDescription>
-            Record patient payments for Invoice <strong>{invoice.invoiceNumber}</strong>.
+          <DialogDescription className="text-xs text-muted-foreground">
+            Collect payment for Invoice #{invoice.invoiceNumber}.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="flex-1">
-            <div className="grid gap-4 p-6">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="space-y-4 p-6">
               {error && (
-                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/25 p-3 rounded-lg font-medium">
+                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/25 p-3 rounded-lg font-medium leading-relaxed">
                   {error}
                 </div>
               )}
 
               {/* Total Balance Due Information Display */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/30 text-xs">
-                <span className="text-muted-foreground font-semibold uppercase tracking-wider">Total Balance Due</span>
-                <span className="text-lg font-bold text-amber-600 font-mono">
+              <div className="flex items-center justify-between p-3.5 rounded-lg bg-muted/40 border border-border/60 text-xs">
+                <span className="text-muted-foreground font-medium uppercase tracking-wider">
+                  Total Balance Due
+                </span>
+                <span className="text-lg font-semibold text-warning tabular-nums">
                   {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(currentBalance)}
                 </span>
               </div>
 
               {/* Input Amount */}
-              <div className="space-y-2">
-                <Label htmlFor="payment-amount" className="text-xs font-semibold uppercase text-muted-foreground">
-                  Payment Amount
+              <div className="space-y-1.5">
+                <Label htmlFor="payment-amount" className="text-xs font-medium text-foreground">
+                  Payment Amount (₹)
                 </Label>
                 <div className="relative">
-                  <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <IndianRupee className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                   <Input
                     id="payment-amount"
                     type="number"
@@ -126,19 +125,21 @@ export function PaymentDialog({ open, onOpenChange, invoice, onSuccess }: Paymen
                     placeholder="0.00"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="pl-8 h-10 bg-background text-sm font-semibold"
+                    className="pl-9 h-9 bg-background text-sm font-semibold tabular-nums"
                     required
                   />
                 </div>
               </div>
 
               {/* Method Option */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase text-muted-foreground">Payment Method</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-foreground">Payment Method</Label>
                 <Select value={method} onValueChange={(val) => setMethod(val ?? "Cash")}>
-                  <SelectTrigger className="h-10 text-sm bg-background">
-                    <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select Method" />
+                  <SelectTrigger className="h-9 text-xs bg-background" aria-label="Select payment method">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <CreditCard className="size-3.5 text-muted-foreground" />
+                      <SelectValue placeholder="Select Method" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Cash">Cash</SelectItem>
@@ -150,14 +151,25 @@ export function PaymentDialog({ open, onOpenChange, invoice, onSuccess }: Paymen
                 </Select>
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
-          <DialogFooter className="bg-muted/30 p-6 pt-4 border-t border-border/50 flex items-center justify-end gap-2 shrink-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-10 text-xs px-5">
+          <DialogFooter className="bg-muted/30 p-4 border-t border-border/40 flex items-center justify-end gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              className="h-9 text-xs"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="h-10 text-xs px-5 bg-emerald-600 hover:bg-emerald-700 text-white">
-              {isSubmitting ? "Completing..." : "Record Payment"}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting}
+              className="h-9 text-xs"
+            >
+              {isSubmitting ? "Recording..." : "Record Payment"}
             </Button>
           </DialogFooter>
         </form>

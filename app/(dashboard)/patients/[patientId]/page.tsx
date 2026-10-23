@@ -8,6 +8,7 @@ import { getPatient } from '@/modules/patients';
 import { listAppointmentsForPatient } from '@/modules/appointments';
 import { listInvoices } from '@/modules/billing';
 import { PatientDetailsView } from '@/modules/patients/components/patient-details-view';
+import { DashboardEmptyState } from '@/components/dashboard/dashboard-empty-state';
 import { NotFoundError } from '@/lib/errors/app-error';
 
 interface PatientPageProps {
@@ -42,25 +43,21 @@ export default async function PatientDetailsPage({ params }: PatientPageProps) {
   // 1. Validate route parameter format
   if (!UUID_REGEX.test(patientId)) {
     return (
-      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-4">
-        <div className="size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
-          <AlertCircle className="size-6" />
-        </div>
-        <div className="space-y-1">
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Invalid Patient Identifier</h1>
-          <p className="text-sm text-muted-foreground">
-            The requested identifier <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{patientId}</code> is not a valid record UUID.
-          </p>
-        </div>
-        <div className="pt-2">
-          <Link
-            href="/patients"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
-          >
-            <ArrowLeft className="size-4" />
-            <span>Back to Patients List</span>
-          </Link>
-        </div>
+      <div className="max-w-2xl mx-auto py-16 px-4 text-center">
+        <DashboardEmptyState
+          icon={AlertCircle}
+          title="Invalid patient identifier"
+          description={`The requested identifier "${patientId}" is not a valid patient UUID.`}
+          action={
+            <Link
+              href="/patients"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2 h-9 text-xs")}
+            >
+              <ArrowLeft className="size-4" />
+              <span>Back to patients</span>
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -75,25 +72,21 @@ export default async function PatientDetailsPage({ params }: PatientPageProps) {
   } catch (error) {
     if (error instanceof NotFoundError) {
       return (
-        <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-4">
-          <div className="size-12 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground">
-            <UserX className="size-6" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold tracking-tight text-foreground">Patient Not Found</h1>
-            <p className="text-sm text-muted-foreground">
-              No active patient record matching this ID exists in your clinic. The record may have been archived or belongs to another clinic.
-            </p>
-          </div>
-          <div className="pt-2">
-            <Link
-              href="/patients"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
-            >
-              <ArrowLeft className="size-4" />
-              <span>Return to Patients</span>
-            </Link>
-          </div>
+        <div className="max-w-2xl mx-auto py-16 px-4 text-center">
+          <DashboardEmptyState
+            icon={UserX}
+            title="Patient not found"
+            description="No active patient record matching this ID exists in your clinic. The record may have been archived or belongs to another clinic."
+            action={
+              <Link
+                href="/patients"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2 h-9 text-xs")}
+              >
+                <ArrowLeft className="size-4" />
+                <span>Return to patients</span>
+              </Link>
+            }
+          />
         </div>
       );
     }
@@ -107,12 +100,14 @@ export default async function PatientDetailsPage({ params }: PatientPageProps) {
   ]);
 
   return (
-    <PatientDetailsView
-      initialPatient={patient}
-      initialAppointments={appointments}
-      initialInvoices={invoicesResult.invoices}
-      userRole={ctx.role}
-      currentMembershipId={ctx.membershipId}
-    />
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <PatientDetailsView
+        initialPatient={patient}
+        initialAppointments={appointments}
+        initialInvoices={invoicesResult.invoices}
+        userRole={ctx.role}
+        currentMembershipId={ctx.membershipId}
+      />
+    </div>
   );
 }

@@ -6,29 +6,32 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 interface AppointmentErrorProps {
-  onRetry?: () => void;
-  message?: string;
+  onRetry?: () => void
+  message?: string
 }
 
-export function AppointmentError({ onRetry, message = "Unable to load appointments" }: AppointmentErrorProps) {
+export function AppointmentError({ 
+  onRetry, 
+  message = "Unable to load appointments" 
+}: AppointmentErrorProps) {
   return (
-    <Card className="border-destructive/20 bg-destructive/5 shadow-none rounded-xl">
-      <CardContent className="p-12 flex flex-col items-center justify-center text-center">
-        <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-4">
-          <AlertCircle size={24} />
+    <Card className="border-destructive/30 bg-destructive/5 shadow-xs rounded-lg">
+      <CardContent className="p-8 flex flex-col items-center justify-center text-center">
+        <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-3">
+          <AlertCircle className="size-5" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground">{message}</h3>
-        <p className="text-sm text-muted-foreground mt-2 max-w-[320px]">
-          Something went wrong while fetching the appointment data. Please try again or contact support if the issue persists.
+        <h3 className="text-base font-semibold text-foreground tracking-tight">{message}</h3>
+        <p className="text-xs text-muted-foreground mt-1 max-w-sm leading-relaxed">
+          Something went wrong while fetching appointment records. Please try again.
         </p>
         {onRetry && (
           <Button 
             onClick={onRetry}
             variant="outline"
-            className="mt-6 gap-2 bg-background border-destructive/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+            className="mt-4 gap-2 text-xs h-9 bg-background border-border/80"
           >
-            <RotateCcw size={16} />
-            Try again
+            <RotateCcw className="size-3.5" />
+            <span>Try again</span>
           </Button>
         )}
       </CardContent>

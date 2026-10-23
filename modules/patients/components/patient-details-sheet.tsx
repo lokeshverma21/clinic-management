@@ -7,7 +7,6 @@ import {
   Mail, 
   Calendar,
   FileText,
-  Activity,
   Pencil,
   Archive,
   Scale
@@ -23,16 +22,36 @@ import {
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
+import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import { PatientAvatar } from "./patient-avatar"
 import { format } from "date-fns"
 import type { Patient } from "../patients.types"
 
 interface PatientDetailsSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  patientId: string | null;
-  onEdit: () => void;
-  onSuccess?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  patientId: string | null
+  onEdit: () => void
+  onSuccess?: () => void
+}
+
+function calculateAge(dobStr?: string | null): number | null {
+  if (!dobStr) return null
+  const dob = new Date(dobStr)
+  if (isNaN(dob.getTime())) return null
+  const today = new Date()
+  let age = today.getFullYear() - dob.getFullYear()
+  const m = today.getMonth() - dob.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--
+  }
+  return age >= 0 ? age : null
+}
+
+function formatGender(gender?: string | null): string {
+  if (!gender || gender === "undisclosed") return "Undisclosed"
+  return gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()
 }
 
 export function PatientDetailsSheet({ 
@@ -72,7 +91,7 @@ export function PatientDetailsSheet({
 
   const handleArchive = async () => {
     if (!patientId) return
-    const confirmed = window.confirm("Are you sure you want to archive this patient? This is a soft delete.")
+    const confirmed = window.confirm("Are you sure you want to archive this patient? This will hide the record from active lists while preserving historical data.")
     if (!confirmed) return
 
     try {
@@ -116,138 +135,119 @@ export function PatientDetailsSheet({
     )
   }
 
-  const creationDate = patient ? format(new Date(patient.createdAt), "MMM dd, yyyy") : ""
-  const birthday = patient?.dateOfBirth ? format(new Date(patient.dateOfBirth), "MMMM dd, yyyy") : "Not specified"
+  const creationDate = patient ? format(new Date(patient.createdAt), "d MMM yyyy") : ""
+  const age = calculateAge(patient?.dateOfBirth)
+  const birthday = patient?.dateOfBirth 
+    ? `${format(new Date(patient.dateOfBirth), "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}` 
+    : "Not specified"
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md border-l border-border/60 p-0 flex flex-col">
-        <SheetHeader className="p-6 border-b border-border/50">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-xl">Patient Profile</SheetTitle>
-            <div className="text-[10px] uppercase font-bold tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              Active
-            </div>
+        <SheetHeader className="p-5 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
+              Patient profile
+            </SheetTitle>
+            <StatusBadge type="membershipStatus" status="active" />
           </div>
-          <SheetDescription>
-            Record created on {creationDate}
+          <SheetDescription className="text-xs text-muted-foreground tabular-nums">
+            Record registered on {creationDate}
           </SheetDescription>
         </SheetHeader>
 
         {patient && (
           <>
             <ScrollArea className="flex-1 min-h-0">
-              <div className="p-6 space-y-8">
+              <div className="p-5 space-y-5">
                 {/* Header / Basic Info */}
-                <div className="flex flex-col items-center text-center space-y-4 py-4">
-                  <PatientAvatar name={patient.fullName} className="h-20 w-20 text-xl" />
+                <div className="flex flex-col items-center text-center space-y-2 py-2">
+                  <PatientAvatar name={patient.fullName} className="size-16 text-lg border border-border/60" />
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">{patient.fullName}</h3>
-                    <p className="text-xs text-muted-foreground">ID: #{patient.id.substring(0, 8).toUpperCase()}</p>
+                    <h3 className="text-lg font-semibold text-foreground tracking-tight">{patient.fullName}</h3>
+                    <p className="text-xs text-muted-foreground tabular-nums">ID: #{patient.id.substring(0, 8).toUpperCase()}</p>
                   </div>
                 </div>
 
                 <Separator className="bg-border/40" />
 
-                {/* Contact & Personal */}
-                <div className="grid gap-6">
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <User size={14} />
-                      Personal Information
-                    </h4>
-                    <div className="grid gap-3">
-                      <div className="bg-muted/30 p-3 rounded-lg border border-border/50 flex flex-col gap-1">
-                        <span className="text-[10px] text-muted-foreground font-semibold uppercase">Phone</span>
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Phone size={14} className="text-muted-foreground" />
-                          {patient.phone}
-                        </div>
-                      </div>
-                      <div className="bg-muted/30 p-3 rounded-lg border border-border/50 flex flex-col gap-1">
-                        <span className="text-[10px] text-muted-foreground font-semibold uppercase">Email</span>
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Mail size={14} className="text-muted-foreground" />
-                          {patient.email || "Not specified"}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-muted/30 p-3 rounded-lg border border-border/50 flex flex-col gap-1">
-                          <span className="text-[10px] text-muted-foreground font-semibold uppercase">Gender</span>
-                          <div className="flex items-center gap-2 text-sm font-medium capitalize">
-                            <Scale size={14} className="text-muted-foreground" />
-                            {patient.gender || "undisclosed"}
-                          </div>
-                        </div>
-                        <div className="bg-muted/30 p-3 rounded-lg border border-border/50 flex flex-col gap-1">
-                          <span className="text-[10px] text-muted-foreground font-semibold uppercase">Birthday</span>
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <Calendar size={14} className="text-muted-foreground" />
-                            {birthday}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
+                {/* Personal Info */}
+                <div className="space-y-1 rounded-lg border border-border/60 p-3.5 bg-card">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <User className="size-3.5" />
+                    <span>Personal information</span>
+                  </div>
+                  <DashboardDetailRow
+                    label="Phone"
+                    value={patient.phone}
+                    icon={Phone}
+                    tabular
+                  />
+                  <DashboardDetailRow
+                    label="Email"
+                    value={patient.email}
+                    icon={Mail}
+                  />
+                  <DashboardDetailRow
+                    label="Gender"
+                    value={formatGender(patient.gender)}
+                    icon={Scale}
+                  />
+                  <DashboardDetailRow
+                    label="Date of birth"
+                    value={birthday}
+                    icon={Calendar}
+                    tabular
+                  />
+                </div>
 
-                  {/* Medical Notes */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <FileText size={14} />
-                      Medical Notes
-                    </h4>
-                    <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                        {patient.notes || "No custom medical notes logged."}
-                      </p>
-                    </div>
-                  </section>
+                {/* Medical Notes */}
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="size-3.5" />
+                    <span>Medical history / notes</span>
+                  </div>
+                  <div className="rounded-lg border border-border/60 p-3.5 bg-card text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                    {patient.notes || <span className="text-muted-foreground italic text-xs">No medical notes recorded.</span>}
+                  </div>
+                </div>
 
-                  {/* Recent Activity */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <Activity size={14} />
-                      System Activity
-                    </h4>
-                    <div className="space-y-4 relative before:absolute before:inset-0 before:left-[11px] before:w-px before:bg-border/50 ml-1">
-                      <div className="relative pl-7">
-                        <div className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-border border-2 border-background" />
-                        <div className="text-sm font-medium">Record Last Modified</div>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                          <span>{format(new Date(patient.updatedAt), "PPP 'at' p")}</span>
-                        </div>
-                      </div>
-                      <div className="relative pl-7">
-                        <div className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-border border-2 border-background" />
-                        <div className="text-sm font-medium">Patient Registered</div>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                          <span>{format(new Date(patient.createdAt), "PPP 'at' p")}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
+                {/* System Activity */}
+                <div className="space-y-1 rounded-lg border border-border/60 p-3.5 bg-card">
+                  <DashboardDetailRow
+                    label="Registered"
+                    value={format(new Date(patient.createdAt), "d MMM yyyy, h:mm a")}
+                    tabular
+                  />
+                  <DashboardDetailRow
+                    label="Last updated"
+                    value={format(new Date(patient.updatedAt), "d MMM yyyy, h:mm a")}
+                    tabular
+                  />
                 </div>
               </div>
             </ScrollArea>
 
-            <SheetFooter className="p-6 border-t border-border/50 grid grid-cols-2 gap-2 bg-muted/10">
+            <SheetFooter className="p-4 border-t border-border/40 bg-muted/20 shrink-0 grid grid-cols-2 gap-2">
               <Button 
+                type="button"
                 variant="outline" 
-                className="w-full gap-2 text-xs" 
+                className="w-full gap-2 text-xs h-9" 
                 onClick={onEdit}
                 disabled={archiving}
               >
-                <Pencil size={14} />
-                Edit Profile
+                <Pencil className="size-3.5" />
+                <span>Edit profile</span>
               </Button>
               <Button 
+                type="button"
                 variant="outline" 
-                className="w-full gap-2 text-xs text-destructive hover:text-destructive"
+                className="w-full gap-2 text-xs h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={handleArchive}
                 disabled={archiving}
               >
-                <Archive size={14} />
-                {archiving ? "Archiving..." : "Archive"}
+                <Archive className="size-3.5" />
+                <span>{archiving ? "Archiving..." : "Archive"}</span>
               </Button>
             </SheetFooter>
           </>

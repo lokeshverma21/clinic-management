@@ -1,3 +1,4 @@
+// modules/billing/components/invoice-details-sheet.tsx
 "use client"
 
 import * as React from "react"
@@ -31,7 +32,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import {
   Table,
@@ -42,20 +42,21 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
-import { InvoiceStatusBadge } from "./invoice-status-badge"
+import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
+import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import type { InvoiceWithDetails } from "../billing.types"
 
 interface InvoiceDetailsSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  invoiceId: string | null;
-  onEdit: () => void;
-  onRecordPayment: (invoice: InvoiceWithDetails) => void;
-  onDuplicate: (invoiceId: string) => void;
-  onDelete: (invoiceId: string) => void;
-  onSuccess?: () => void;
-  readOnly?: boolean;
-  canDelete?: boolean;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  invoiceId: string | null
+  onEdit: () => void
+  onRecordPayment: (invoice: InvoiceWithDetails) => void
+  onDuplicate: (invoiceId: string) => void
+  onDelete: (invoiceId: string) => void
+  onSuccess?: () => void
+  readOnly?: boolean
+  canDelete?: boolean
 }
 
 function formatINR(value: string | number) {
@@ -109,16 +110,13 @@ export function InvoiceDetailsSheet({
   }, [open, invoiceId])
 
   // Clear state when closing
-  React.useEffect(() => {
-    if (open) return
-
-    const timeoutId = window.setTimeout(() => {
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
       setInvoice(null)
       setError(null)
-    }, 0)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [open])
+    }
+    onOpenChange(isOpen)
+  }
 
   const handleDelete = async () => {
     if (!invoiceId) return
@@ -153,6 +151,7 @@ export function InvoiceDetailsSheet({
     }
   }
 
+  // Exact role/permission conditions preserved from the existing code
   const canEdit = !readOnly && invoice?.status === "draft"
   const canPay =
     !readOnly &&
@@ -164,79 +163,97 @@ export function InvoiceDetailsSheet({
     parseFloat(invoice.balanceDue) > 0
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col h-full max-h-screen overflow-hidden">
-        <SheetHeader className="p-6 pb-4 border-b border-border/50 shrink-0">
-          <SheetTitle className="text-lg">Invoice Details</SheetTitle>
-          <SheetDescription>
-            {invoice ? invoice.invoiceNumber : "Loading invoice information..."}
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col h-full max-h-screen overflow-hidden border-l border-border/60">
+        <SheetHeader className="p-5 pb-4 border-b border-border/40 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
+              Invoice details
+            </SheetTitle>
+            {invoice && <StatusBadge type="invoice" status={invoice.status} />}
+          </div>
+          <SheetDescription className="text-xs text-muted-foreground tabular-nums">
+            {invoice ? `Reference #${invoice.invoiceNumber}` : "Loading invoice information..."}
           </SheetDescription>
         </SheetHeader>
 
         {loading ? (
           <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-            Loading...
+            Loading invoice details...
           </div>
         ) : error ? (
-          <div className="p-6 text-sm text-destructive">{error}</div>
+          <div className="p-5 text-sm text-destructive bg-destructive/10 border border-destructive/20 m-5 rounded-lg">
+            {error}
+          </div>
         ) : invoice ? (
           <>
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <InvoiceStatusBadge status={invoice.status} />
-                  <span className="text-xs text-muted-foreground">
-                    Issued {format(new Date(invoice.issuedAt), "MMM d, yyyy")}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="p-5 space-y-6">
+                {/* Meta details */}
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                    General Information
                   </span>
+                  <div className="space-y-2">
+                    <DashboardDetailRow
+                      label="Patient"
+                      value={`${invoice.patient.fullName} (${invoice.patient.phone})`}
+                      icon={User}
+                    />
+                    {invoice.patient.email && (
+                      <DashboardDetailRow
+                        label="Email"
+                        value={invoice.patient.email}
+                      />
+                    )}
+                    {invoice.doctor && (
+                      <DashboardDetailRow
+                        label="Doctor"
+                        value={invoice.doctor.fullName}
+                        icon={User}
+                      />
+                    )}
+                    <DashboardDetailRow
+                      label="Issued date"
+                      value={format(new Date(invoice.issuedAt), "EEE d MMM yyyy")}
+                      icon={Calendar}
+                    />
+                    {invoice.dueAt && (
+                      <DashboardDetailRow
+                        label="Payment due"
+                        value={format(new Date(invoice.dueAt), "EEE d MMM yyyy")}
+                        icon={Calendar}
+                      />
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid gap-3 text-sm">
-                  <div className="flex items-start gap-3">
-                    <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">{invoice.patient.fullName}</p>
-                      <p className="text-xs text-muted-foreground">{invoice.patient.email ?? "No email"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{invoice.patient.phone}</span>
-                  </div>
-                  {invoice.doctor && (
-                    <div className="flex items-center gap-3">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>Dr. {invoice.doctor.fullName}</span>
-                    </div>
-                  )}
-                  {invoice.dueAt && (
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>Due {format(new Date(invoice.dueAt), "MMM d, yyyy")}</span>
-                    </div>
-                  )}
-                </div>
+                <Separator className="bg-border/50" />
 
-                <Separator />
-
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                {/* Line Items */}
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
                     Line Items
-                  </h4>
-                  <div className="rounded-lg border border-border/60 overflow-hidden">
+                  </span>
+                  <div className="rounded-lg border border-border/60 overflow-hidden bg-card">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-muted/50 border-b border-border/50">
                         <TableRow className="hover:bg-transparent">
-                          <TableHead className="text-xs">Description</TableHead>
-                          <TableHead className="text-xs text-right">Qty</TableHead>
-                          <TableHead className="text-xs text-right">Total</TableHead>
+                          <TableHead className="h-8 text-[11px] font-medium text-muted-foreground">Description</TableHead>
+                          <TableHead className="h-8 text-[11px] font-medium text-muted-foreground text-right">Qty</TableHead>
+                          <TableHead className="h-8 text-[11px] font-medium text-muted-foreground text-right">Total</TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody>
+                      <TableBody className="divide-y divide-border/40">
                         {invoice.items.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="text-xs">{item.description}</TableCell>
-                            <TableCell className="text-xs text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-xs text-right font-medium">
+                          <TableRow key={item.id} className="hover:bg-muted/20">
+                            <TableCell className="text-xs font-medium text-foreground py-2.5">
+                              {item.description}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground text-right py-2.5 tabular-nums">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-xs font-semibold text-foreground text-right py-2.5 tabular-nums">
                               {formatINR(item.totalPrice)}
                             </TableCell>
                           </TableRow>
@@ -246,82 +263,96 @@ export function InvoiceDetailsSheet({
                   </div>
                 </div>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatINR(invoice.subtotal)}</span>
+                <Separator className="bg-border/50" />
+
+                {/* Totals Summary */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span className="tabular-nums font-medium text-foreground">{formatINR(invoice.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Discount</span>
-                    <span>-{formatINR(invoice.discount)}</span>
+                  {parseFloat(invoice.discount) > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Discount</span>
+                      <span className="tabular-nums font-medium text-foreground">-{formatINR(invoice.discount)}</span>
+                    </div>
+                  )}
+                  {parseFloat(invoice.tax) > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Tax</span>
+                      <span className="tabular-nums font-medium text-foreground">+{formatINR(invoice.tax)}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-border/60 flex justify-between font-semibold text-sm text-foreground">
+                    <span>Grand Total</span>
+                    <span className="tabular-nums">{formatINR(invoice.totalAmount)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span>{formatINR(invoice.tax)}</span>
+                  <div className="flex justify-between text-xs pt-1">
+                    <span className="text-muted-foreground">Amount Paid</span>
+                    <span className="tabular-nums font-medium text-success">{formatINR(invoice.amountPaid)}</span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>{formatINR(invoice.totalAmount)}</span>
-                  </div>
-                  <div className="flex justify-between text-emerald-600">
-                    <span>Amount Paid</span>
-                    <span>{formatINR(invoice.amountPaid)}</span>
-                  </div>
-                  <div className="flex justify-between text-amber-600 font-medium">
-                    <span>Balance Due</span>
-                    <span>{formatINR(invoice.balanceDue)}</span>
+                  <div className="flex justify-between text-xs pt-1 border-t border-border/40">
+                    <span className="font-medium text-muted-foreground">Balance Due</span>
+                    <span className="tabular-nums font-semibold text-warning">{formatINR(invoice.balanceDue)}</span>
                   </div>
                 </div>
 
                 {invoice.notes && (
-                  <div className="flex gap-3 text-sm">
-                    <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <p className="text-muted-foreground whitespace-pre-wrap">{invoice.notes}</p>
-                  </div>
+                  <>
+                    <Separator className="bg-border/50" />
+                    <div className="space-y-1.5">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                        Notes
+                      </span>
+                      <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/30 p-3 rounded-lg border border-border/40">
+                        {invoice.notes}
+                      </p>
+                    </div>
+                  </>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
-            <SheetFooter className="p-6 pt-4 border-t border-border/50 flex-col sm:flex-col gap-2 shrink-0 max-h-[45vh] overflow-y-auto">
-              {error && (
-                <p className="text-xs text-destructive text-center w-full">{error}</p>
-              )}
+            <SheetFooter className="p-4 border-t border-border/40 flex-col sm:flex-col gap-2 shrink-0">
               {canEdit && (
-                <Button variant="outline" className="w-full gap-2" onClick={onEdit}>
-                  <Pencil className="h-4 w-4" />
-                  Edit Invoice
+                <Button variant="outline" size="sm" className="w-full gap-2 h-9 text-xs" onClick={onEdit}>
+                  <Pencil className="size-3.5" />
+                  <span>Edit Invoice</span>
                 </Button>
               )}
               {canPay && (
-                <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => onRecordPayment(invoice)}>
-                  <Wallet className="h-4 w-4" />
-                  Record Payment
+                <Button size="sm" className="w-full gap-2 h-9 text-xs shadow-xs" onClick={() => onRecordPayment(invoice)}>
+                  <Wallet className="size-3.5" />
+                  <span>Record Payment</span>
                 </Button>
               )}
               {!readOnly && (
                 <Button
-                  variant="secondary"
-                  className="w-full gap-2"
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 h-9 text-xs"
                   onClick={handleDuplicate}
                   disabled={duplicating}
                 >
-                  <Copy className="h-4 w-4" />
-                  {duplicating ? "Duplicating..." : "Duplicate Invoice"}
+                  <Copy className="size-3.5" />
+                  <span>{duplicating ? "Duplicating..." : "Duplicate Invoice"}</span>
                 </Button>
               )}
               {canDelete && (
                 <AlertDialog>
-                  <AlertDialogTrigger>
-                    <Button
-                      variant="destructive"
-                      className="w-full gap-2"
-                      disabled={deleting}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      {deleting ? "Deleting..." : "Delete Invoice"}
-                    </Button>
-                  </AlertDialogTrigger>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full gap-2 h-9 text-xs"
+                        disabled={deleting}
+                      >
+                        <Trash2 className="size-3.5" />
+                        <span>{deleting ? "Deleting..." : "Delete Invoice"}</span>
+                      </Button>
+                    }
+                  />
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>

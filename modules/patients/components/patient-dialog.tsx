@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Popover,
   PopoverContent,
@@ -40,11 +39,11 @@ import { cn } from "@/lib/utils"
 import type { Patient } from "../patients.types"
 
 interface PatientDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  mode: 'add' | 'edit';
-  patientId?: string | null;
-  onSuccess?: (patient: Patient) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  mode: "add" | "edit"
+  patientId?: string | null
+  onSuccess?: (patient: Patient) => void
 }
 
 export function PatientDialog({ 
@@ -68,7 +67,7 @@ export function PatientDialog({
   React.useEffect(() => {
     if (!open) return
 
-    if (mode === 'edit' && patientId) {
+    if (mode === "edit" && patientId) {
       async function loadPatient() {
         try {
           setIsSubmitting(true)
@@ -93,14 +92,16 @@ export function PatientDialog({
       }
       loadPatient()
     } else {
-      setFullName("")
-      setPhone("")
-      setEmail("")
-      setDate(undefined)
-      setGender("undisclosed")
-      setNotes("")
-      setError(null)
-      setShowDuplicateWarning(false)
+      queueMicrotask(() => {
+        setFullName("")
+        setPhone("")
+        setEmail("")
+        setDate(undefined)
+        setGender("undisclosed")
+        setNotes("")
+        setError(null)
+        setShowDuplicateWarning(false)
+      })
     }
   }, [open, mode, patientId])
 
@@ -110,11 +111,10 @@ export function PatientDialog({
       const json = await res.json()
       if (res.ok && json.data?.patients) {
         const list = json.data.patients as Patient[]
-        // Match phone exactly and exclude current editing record
         return list.some(p => p.phone === phoneNumber && p.id !== patientId)
       }
     } catch {
-      // Non-blocking, continue
+      // Non-blocking
     }
     return false
   }
@@ -128,12 +128,12 @@ export function PatientDialog({
     const cleanedPhone = phone.replace(/\s+/g, "")
     const phoneRegex = /^\+[1-9]\d{7,14}$/
     if (!phoneRegex.test(cleanedPhone)) {
-      setError("Phone number must be in international format (e.g. +14155552671)")
+      setError("Phone number must be in international format (e.g. +919876543210 or +14155552671)")
       setIsSubmitting(false)
       return
     }
 
-    if (mode === 'add' && !showDuplicateWarning) {
+    if (mode === "add" && !showDuplicateWarning) {
       const isDuplicate = await checkDuplicate(cleanedPhone)
       if (isDuplicate) {
         setShowDuplicateWarning(true)
@@ -152,8 +152,8 @@ export function PatientDialog({
         notes: notes.trim() || undefined,
       }
 
-      const url = mode === 'add' ? "/api/patients" : `/api/patients/${patientId}`
-      const method = mode === 'add' ? "POST" : "PATCH"
+      const url = mode === "add" ? "/api/patients" : `/api/patients/${patientId}`
+      const method = mode === "add" ? "POST" : "PATCH"
 
       const response = await fetch(url, {
         method,
@@ -178,234 +178,196 @@ export function PatientDialog({
     }
   }
 
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden rounded-xl border-border/60 p-0 shadow-lg sm:max-w-[500px]"
-      >
-        <DialogHeader className="shrink-0 border-b border-border/50 p-6 pb-4">
-          <DialogTitle className="text-xl">
-            {mode === "add" ? "Add Patient" : "Edit Patient"}
+      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden rounded-lg border-border/60 p-0 shadow-lg sm:max-w-lg">
+        <DialogHeader className="shrink-0 border-b border-border/40 p-5 pb-4">
+          <DialogTitle className="text-xl font-semibold tracking-tight text-foreground">
+            {mode === "add" ? "Add patient" : "Edit patient"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm text-muted-foreground">
             {mode === "add"
-              ? "Create a new patient record in the system."
-              : "Modify existing patient information."}
+              ? "Create a new patient record in your clinic directory."
+              : "Update demographic and contact details for this patient."}
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-        >
-          {/* Scrollable form content */}
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="grid gap-6 p-6">
+            <div className="space-y-4 p-5">
               {error && (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive leading-relaxed">
                   {error}
                 </div>
               )}
 
               {showDuplicateWarning && (
-                <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-
-                  <div className="text-xs leading-relaxed">
-                    <p className="mb-1 font-semibold">
-                      Potential Duplicate
-                    </p>
-                    <p className="mb-2">
-                      This phone number already exists for another patient.
-                      Shared household numbers are allowed.
-                    </p>
-
+                <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3.5 text-warning">
+                  <AlertCircle className="mt-0.5 size-4 shrink-0 text-warning" />
+                  <div className="text-xs leading-relaxed space-y-2">
+                    <div>
+                      <p className="font-semibold text-warning">Potential duplicate phone number</p>
+                      <p className="text-muted-foreground mt-0.5">
+                        This phone number already exists on another patient record. Shared family or household phone numbers are permitted.
+                      </p>
+                    </div>
                     <Button
                       type="submit"
                       size="sm"
-                      className="h-7 bg-amber-600 px-3 text-xs text-white hover:bg-amber-700"
+                      className="h-7 bg-warning text-warning-foreground hover:bg-warning/90 px-3 text-xs"
                       disabled={isSubmitting}
                     >
-                      Confirm &amp; Save Anyway
+                      Confirm and save anyway
                     </Button>
                   </div>
                 </div>
               )}
 
-              <div className="grid gap-4">
-                <div className="min-w-0 space-y-2">
-                  <Label
-                    htmlFor="fullName"
-                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Full Name
-                  </Label>
+              {/* Full Name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName" className="text-xs font-medium text-foreground">
+                  Full name <span className="text-destructive">*</span>
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="h-10 bg-background pl-9 text-sm"
+                    required
+                  />
+                </div>
+              </div>
 
+              {/* Phone & Email */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone" className="text-xs font-medium text-foreground">
+                    Phone number <span className="text-destructive">*</span>
+                  </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                     <Input
-                      id="fullName"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Sarah Connor"
-                      className="h-10 bg-background pl-9 text-sm"
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+919876543210"
+                      className="h-10 bg-background pl-9 text-sm tabular-nums"
                       required
                     />
                   </div>
+                  <p className="text-[11px] text-muted-foreground">International format with country code</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="min-w-0 space-y-2">
-                    <Label
-                      htmlFor="phone"
-                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      Phone Number
-                    </Label>
-
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="e.g. +14155552671"
-                        className="h-10 bg-background pl-9 text-sm"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="min-w-0 space-y-2">
-                    <Label
-                      htmlFor="email"
-                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      Email (Optional)
-                    </Label>
-
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. sarah.c@sky.net"
-                        className="h-10 bg-background pl-9 text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                      <div className="space-y-2">
-                      <Label htmlFor="dob" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date of Birth</Label>
-                      <div className="relative">
-                        <Popover>
-                          <PopoverTrigger
-                            render={
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal h-10 bg-background text-sm pl-9",
-                                  !date && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                {date ? format(date, "PPP") : <span>Pick a date</span>}
-                              </Button>
-                            }
-                          />
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={date}
-                              onSelect={setDate}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-
-                  <div className="min-w-0 space-y-2">
-                    <Label
-                      htmlFor="gender"
-                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      Gender
-                    </Label>
-
-                    <Select
-                      value={gender}
-                      onValueChange={(val) =>
-                        setGender(val ?? "undisclosed")
-                      }
-                    >
-                      <SelectTrigger
-                        id="gender"
-                        className="h-10 bg-background text-sm"
-                      >
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="undisclosed">
-                          Undisclosed
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="min-w-0 space-y-2">
-                  <Label
-                    htmlFor="notes"
-                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Notes (Optional)
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-medium text-foreground">
+                    Email address
                   </Label>
-
                   <div className="relative">
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Textarea
-                      id="notes"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Medical history, allergies, etc."
-                      className="min-h-[100px] resize-y bg-background py-2.5 pl-9 text-sm"
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="patient@example.com"
+                      className="h-10 bg-background pl-9 text-sm"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* DOB & Gender */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-foreground">Date of birth</Label>
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal h-10 bg-background text-sm tabular-nums",
+                            !date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 size-4 text-muted-foreground shrink-0" />
+                          {date ? format(date, "PPP") : <span>Pick date of birth</span>}
+                        </Button>
+                      }
+                    />
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="gender" className="text-xs font-medium text-foreground">
+                    Gender
+                  </Label>
+                  <Select
+                    value={gender}
+                    onValueChange={(val) => setGender(val ?? "undisclosed")}
+                  >
+                    <SelectTrigger id="gender" className="h-10 bg-background text-sm">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="undisclosed">Undisclosed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-1.5">
+                <Label htmlFor="notes" className="text-xs font-medium text-foreground">
+                  Medical history or background notes
+                </Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 size-4 text-muted-foreground pointer-events-none" />
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Allergies, chronic conditions, or background notes..."
+                    className="min-h-[90px] resize-none bg-background py-2 pl-9 text-sm border-border/60"
+                  />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Fixed footer: always accessible */}
-          <DialogFooter className="shrink-0 border-t border-border/50 bg-muted/30 p-4 sm:p-6">
+          <DialogFooter className="shrink-0 border-t border-border/40 bg-muted/30 p-4 flex flex-row items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-10 px-6"
+              className="h-10 px-4 text-sm"
             >
               Cancel
             </Button>
-
             <Button
               type="submit"
-              className="h-10 px-6"
+              className="h-10 px-5 text-sm bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={isSubmitting}
             >
               {isSubmitting
-                ? "Processing..."
+                ? "Saving..."
                 : mode === "add"
-                  ? "Create Patient"
-                  : "Save Changes"}
+                ? "Create patient"
+                : "Save changes"}
             </Button>
           </DialogFooter>
         </form>

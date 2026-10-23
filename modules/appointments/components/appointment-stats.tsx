@@ -1,96 +1,43 @@
 "use client"
 
 import * as React from "react"
-import { 
-  Calendar, 
-  CheckCircle2, 
-  XCircle, 
-  Clock,
-  type LucideIcon
-} from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Calendar, CheckCircle2, Clock, XCircle } from "lucide-react"
+import { DashboardStatCard } from "@/components/dashboard/dashboard-stat-card"
 import type { AppointmentWithDetails } from "../appointment.types"
 
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  icon: LucideIcon;
-  iconClass: string;
-  trend?: {
-    value: number;
-    isUp: boolean;
-  };
-}
-
-function StatCard({ title, value, icon: Icon, iconClass, trend }: StatCardProps) {
-  return (
-    <Card className="shadow-none border-border/60 bg-card/50">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1",
-              iconClass
-            )}
-          >
-            <Icon size={18} strokeWidth={2} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <h3 className="text-xl font-bold tracking-tight">{value}</h3>
-              {trend && (
-                <span className={cn(
-                  "text-[10px] font-bold px-1 rounded-sm",
-                  trend.isUp ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"
-                )}>
-                  {trend.isUp ? "+" : "-"}{trend.value}%
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 interface AppointmentStatsProps {
-  appointments: AppointmentWithDetails[];
+  appointments: AppointmentWithDetails[]
 }
 
 export function AppointmentStats({ appointments }: AppointmentStatsProps) {
   const total = appointments.length
-  const confirmed = appointments.filter(a => a.status === "confirmed").length
-  const completed = appointments.filter(a => a.status === "completed").length
-  const cancelled = appointments.filter(a => a.status === "canceled").length
+  const confirmed = appointments.filter((a) => a.status === "confirmed").length
+  const completed = appointments.filter((a) => a.status === "completed").length
+  const canceled = appointments.filter(
+    (a) => a.status === "canceled" || a.status === "no_show"
+  ).length
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard 
-        title="Schedule Appointments" 
-        value={total} 
-        icon={Calendar} 
-        iconClass="bg-teal-50 text-teal-700 ring-teal-100"
+      <DashboardStatCard
+        title="Scheduled"
+        value={total}
+        icon={Calendar}
       />
-      <StatCard 
-        title="Confirmed" 
-        value={confirmed} 
-        icon={CheckCircle2} 
-        iconClass="bg-sky-50 text-sky-700 ring-sky-100"
+      <DashboardStatCard
+        title="Confirmed"
+        value={confirmed}
+        icon={CheckCircle2}
       />
-      <StatCard 
-        title="Completed" 
-        value={completed} 
-        icon={Clock} 
-        iconClass="bg-emerald-50 text-emerald-700 ring-emerald-100"
+      <DashboardStatCard
+        title="Completed"
+        value={completed}
+        icon={Clock}
       />
-      <StatCard 
-        title="Cancelled" 
-        value={cancelled} 
-        icon={XCircle} 
-        iconClass="bg-rose-50 text-rose-700 ring-rose-100"
+      <DashboardStatCard
+        title="Canceled / No show"
+        value={canceled}
+        icon={XCircle}
       />
     </div>
   )

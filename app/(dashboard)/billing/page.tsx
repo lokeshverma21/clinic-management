@@ -170,7 +170,7 @@ export default function BillingPage() {
 
   if (isLoading && invoices.length === 0 && !hasError) {
     return (
-      <div className="container p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="space-y-6">
         <BillingLoading />
       </div>
     )
@@ -178,7 +178,7 @@ export default function BillingPage() {
 
   if (hasError && invoices.length === 0) {
     return (
-      <div className="container p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-6">
         <BillingHeader onCreateInvoice={handleCreateInvoice} />
         <BillingError onRetry={refreshAll} />
       </div>
@@ -196,7 +196,7 @@ export default function BillingPage() {
   const showEmptyState = invoices.length === 0 && !isFiltered
 
   return (
-    <div className="container p-4 sm:p-6 lg:p-2 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <BillingHeader onCreateInvoice={handleCreateInvoice} />
 
       <BillingStatsCards stats={stats} loading={statsLoading} />

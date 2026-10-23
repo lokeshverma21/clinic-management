@@ -292,6 +292,12 @@
   --color-accent: #E8F0E9;
   --color-accent-foreground: #0D4F4F;
   --color-destructive: #FF6B6B;
+  --color-success: #15803D;
+  --color-success-foreground: #FAFBFC;
+  --color-warning: #B45309;
+  --color-warning-foreground: #FAFBFC;
+  --color-info: #0369A1;
+  --color-info-foreground: #FAFBFC;
   --color-border: rgba(26, 46, 53, 0.1);
   --color-input: rgba(26, 46, 53, 0.1);
   --color-ring: #0D4F4F;
@@ -323,6 +329,15 @@
   --radius-4xl: calc(0.625rem * 2.6);
 }
 
+:root {
+  --success: #15803D;
+  --success-foreground: #FAFBFC;
+  --warning: #B45309;
+  --warning-foreground: #FAFBFC;
+  --info: #0369A1;
+  --info-foreground: #FAFBFC;
+}
+
 /* Dark mode overrides */
 .dark {
   --color-background: #1A2E35;
@@ -342,6 +357,12 @@
   --color-border: rgba(255, 255, 255, 0.1);
   --color-input: rgba(255, 255, 255, 0.15);
   --color-ring: #1A6B6B;
+  --color-success: #22C55E;
+  --color-success-foreground: #1A2E35;
+  --color-warning: #F59E0B;
+  --color-warning-foreground: #1A2E35;
+  --color-info: #38BDF8;
+  --color-info-foreground: #1A2E35;
   
   --color-sidebar: #1A2E35;
   --color-sidebar-foreground: #FAFBFC;

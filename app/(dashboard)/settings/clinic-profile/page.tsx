@@ -1,4 +1,5 @@
 import * as React from "react"
+import { getRequestContext } from "@/lib/auth/request-context"
 import { ClinicProfileHeader } from "@/modules/clinic-profile/components/clinic-profile-header"
 import { ClinicProfileForm } from "@/modules/clinic-profile/components/clinic-profile-form"
 
@@ -7,14 +8,17 @@ export const metadata = {
   description: "Manage your clinic information and operating hours.",
 };
 
-export default function SettingsClinicProfilePage() {
+export default async function SettingsClinicProfilePage() {
+  const ctx = await getRequestContext();
+  const canEdit = ctx.role === "owner";
+
   return (
-    <div className="container max-w-4xl py-2 mx-auto">
+    <div className="space-y-6">
       <ClinicProfileHeader 
         title="Clinic Profile" 
-        subtitle="Manage your clinic information and operating hours." 
+        subtitle="Manage your clinic information, branding, and operating hours." 
       />
-      <ClinicProfileForm mode="settings" />
+      <ClinicProfileForm mode="settings" canEdit={canEdit} />
     </div>
   )
 }

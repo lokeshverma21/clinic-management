@@ -114,17 +114,17 @@ export default function AppointmentsPage() {
   // ---------------------------------------------------------------------------
   // Client-side search — derived value, no effect needed
   // ---------------------------------------------------------------------------
-  const appointments = fetchStatus.type === "success" ? fetchStatus.appointments : []
-
   const filteredAppointments = React.useMemo(() => {
+    if (fetchStatus.type !== "success") return []
+    const list = fetchStatus.appointments
     const query = searchQuery.toLowerCase().trim()
-    if (!query) return appointments
-    return appointments.filter(
+    if (!query) return list
+    return list.filter(
       (apt) =>
         apt.patient.fullName.toLowerCase().includes(query) ||
         apt.patient.phone.includes(query),
     )
-  }, [appointments, searchQuery])
+  }, [fetchStatus, searchQuery])
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -158,7 +158,7 @@ export default function AppointmentsPage() {
   // ---------------------------------------------------------------------------
   if (fetchStatus.type === "idle" || fetchStatus.type === "loading") {
     return (
-      <div className="container mx-auto max-w-7xl p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <AppointmentLoading />
       </div>
     )
@@ -166,7 +166,7 @@ export default function AppointmentsPage() {
 
   if (fetchStatus.type === "error") {
     return (
-      <div className="container mx-auto max-w-7xl space-y-8 p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         <AppointmentHeader onBookAppointment={handleBook} />
         <AppointmentError onRetry={refresh} />
       </div>
@@ -177,7 +177,7 @@ export default function AppointmentsPage() {
   // Main render (fetchStatus.type === "success")
   // ---------------------------------------------------------------------------
   return (
-    <div className="container mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-2 space-y-8 p-4 duration-500 sm:p-2 lg:p-2">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       <AppointmentHeader onBookAppointment={handleBook} />
 
       <AppointmentStats appointments={filteredAppointments} />
@@ -194,26 +194,26 @@ export default function AppointmentsPage() {
         onReset={handleReset}
       />
 
-      <Tabs defaultValue="timeline" className="w-full">
-        <div className="mb-4 flex items-center justify-between">
-          <TabsList className="rounded-lg border border-border/50 bg-muted/50 p-1">
+      <Tabs defaultValue="timeline" className="w-full space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <TabsList className="bg-muted/60 p-1 border border-border/50 h-9 rounded-lg">
             <TabsTrigger
               value="timeline"
-              className="gap-2 px-4 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="gap-2 px-3 py-1 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs"
             >
-              <Calendar size={14} />
-              Timeline
+              <Calendar className="size-3.5" />
+              <span>Timeline</span>
             </TabsTrigger>
             <TabsTrigger
               value="list"
-              className="gap-2 px-4 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="gap-2 px-3 py-1 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs"
             >
-              <List size={14} />
-              List View
+              <List className="size-3.5" />
+              <span>Table view</span>
             </TabsTrigger>
           </TabsList>
 
-          <div className="hidden text-xs font-medium text-muted-foreground sm:block">
+          <div className="text-xs font-medium text-muted-foreground tabular-nums">
             Showing {filteredAppointments.length} appointment
             {filteredAppointments.length !== 1 ? "s" : ""}
           </div>
@@ -221,7 +221,7 @@ export default function AppointmentsPage() {
 
         <TabsContent
           value="timeline"
-          className="mt-0 bg-background ring-offset-background focus-visible:outline-none"
+          className="mt-0 focus-visible:outline-none"
         >
           <AppointmentTimeline
             appointments={filteredAppointments}
@@ -233,7 +233,7 @@ export default function AppointmentsPage() {
 
         <TabsContent
           value="list"
-          className="mt-0 bg-background ring-offset-background focus-visible:outline-none"
+          className="mt-0 focus-visible:outline-none"
         >
           <AppointmentTable
             appointments={filteredAppointments}

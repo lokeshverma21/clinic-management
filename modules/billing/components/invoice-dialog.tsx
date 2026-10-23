@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Trash2, FileSpreadsheet, Search, Check, ChevronsUpDown } from "lucide-react"
+import { Plus, Trash2, Search, Check } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -41,11 +40,11 @@ import type { Patient } from "@/modules/patients/patients.types"
 import type { StaffListItem } from "@/modules/staff"
 
 interface InvoiceDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  mode: "add" | "edit";
-  invoiceId?: string | null;
-  onSuccess?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  mode: "add" | "edit"
+  invoiceId?: string | null
+  onSuccess?: () => void
 }
 
 const emptyItem = (): InvoiceItemInput => ({
@@ -99,117 +98,124 @@ export function InvoiceDialog({
         ])
         const patientsJson = await patientsRes.json()
         const staffJson = await staffRes.json()
-        if (patientsRes.ok) {
-          setPatients(patientsJson.data?.patients ?? [])
+
+        if (patientsRes.ok && patientsJson.data?.patients) {
+          setPatients(patientsJson.data.patients)
         }
-        if (staffRes.ok) {
-          const list = (staffJson.data?.staff ?? []) as StaffListItem[]
-          setDoctors(list.filter((d) => (d.role === "doctor" || d.role === "owner") && d.status === "active"))
+        if (staffRes.ok && staffJson.data?.staff) {
+          const staffList = staffJson.data.staff as StaffListItem[]
+          setDoctors(
+            staffList.filter(
+              (s) => (s.role === "doctor" || s.role === "owner") && s.status === "active"
+            )
+          )
         }
-      } catch {
-        // Non-blocking — user can still fill the form
+      } catch (err) {
+        console.error("Failed to load options", err)
       }
     }
 
-    const t = window.setTimeout(() => {
-      void loadOptions()
-    }, 0)
-    return () => window.clearTimeout(t)
+    loadOptions()
   }, [open])
 
-  // Load invoice data for edit mode
+  // Load existing invoice for edit mode
   React.useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setPatientId("")
+      setDoctorMembershipId("none")
+      setItems([emptyItem()])
+      setInvoiceDiscount("0")
+      setInvoiceTax("0")
+      setAmountPaid("0")
+      setNotes("")
+      setPaymentMethod("none")
+      setError(null)
+      setIsLocked(false)
+      return
+    }
 
-    const t = window.setTimeout(() => {
-      if (mode === "edit" && invoiceId) {
-        async function loadInvoice() {
-          try {
-            setIsSubmitting(true)
-            setError(null)
-            const res = await fetch(`/api/billing/${invoiceId}`)
-            const json = await res.json()
-            if (!res.ok) {
-              throw new Error(json.error?.message ?? "Failed to load invoice")
-            }
-            const invoice = json.data.invoice as InvoiceWithDetails
-            setIsLocked(invoice.status !== "draft")
-            setPatientId(invoice.patientId)
-            setDoctorMembershipId(invoice.doctorMembershipId ?? "none")
+    if (mode === "edit" && invoiceId) {
+      async function loadInvoice() {
+        try {
+          const res = await fetch(`/api/billing/${invoiceId}`)
+          const json = await res.json()
+          if (!res.ok) throw new Error(json.error?.message ?? "Failed to load invoice")
+
+          const inv: InvoiceWithDetails = json.data.invoice
+          setPatientId(inv.patientId)
+          setDoctorMembershipId(inv.doctorMembershipId ?? "none")
+          setInvoiceDiscount(String(inv.discount))
+          setInvoiceTax(String(inv.tax))
+          setAmountPaid(String(inv.amountPaid))
+          setNotes(inv.notes ?? "")
+          setPaymentMethod(inv.paymentMethod ?? "none")
+          setIsLocked(inv.status !== "draft")
+
+          if (inv.items && inv.items.length > 0) {
             setItems(
-              invoice.items.map((item) => ({
-                description: item.description,
-                quantity: item.quantity,
-                unitPrice: parseFloat(item.unitPrice),
-                discount: parseFloat(item.discount),
-                tax: parseFloat(item.tax),
-              })),
+              inv.items.map((it) => ({
+                description: it.description,
+                quantity: it.quantity,
+                unitPrice: parseFloat(it.unitPrice),
+                discount: parseFloat(it.discount),
+                tax: parseFloat(it.tax),
+              }))
             )
-            setInvoiceDiscount(invoice.discount)
-            setInvoiceTax(invoice.tax)
-            setAmountPaid(invoice.amountPaid)
-            setNotes(invoice.notes ?? "")
-            setPaymentMethod(invoice.paymentMethod ?? "none")
-          } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong")
-          } finally {
-            setIsSubmitting(false)
           }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to load invoice")
         }
-        void loadInvoice()
-      } else {
-        // Reset for add mode
-        setPatientId("")
-        setPatientSearch("")
-        setDoctorMembershipId("none")
-        setItems([emptyItem()])
-        setInvoiceDiscount("0")
-        setInvoiceTax("0")
-        setAmountPaid("0")
-        setNotes("")
-        setPaymentMethod("none")
-        setError(null)
-        setIsLocked(false)
       }
-    }, 0)
-
-    return () => window.clearTimeout(t)
+      loadInvoice()
+    }
   }, [open, mode, invoiceId])
 
-  // Derived totals
-  const subtotal = items.reduce((sum, item) => sum + round(item.quantity * item.unitPrice), 0)
-  const itemDiscounts = items.reduce((sum, item) => sum + (item.discount ?? 0), 0)
-  const itemTaxes = items.reduce((sum, item) => sum + (item.tax ?? 0), 0)
-  const invDiscount = parseFloat(invoiceDiscount) || 0
-  const invTax = parseFloat(invoiceTax) || 0
-  const grandTotal = round(subtotal - (itemDiscounts + invDiscount) + (itemTaxes + invTax))
+  // Compute live totals matching the backend math
+  const itemsSubtotal = round(
+    items.reduce((sum, it) => sum + it.quantity * it.unitPrice, 0)
+  )
+  const itemsDiscount = round(
+    items.reduce((sum, it) => sum + (it.discount ?? 0), 0)
+  )
+  const itemsTax = round(
+    items.reduce((sum, it) => sum + (it.tax ?? 0), 0)
+  )
+  const parsedInvoiceDiscount = parseFloat(invoiceDiscount) || 0
+  const parsedInvoiceTax = parseFloat(invoiceTax) || 0
+  const parsedAmountPaid = parseFloat(amountPaid) || 0
 
-  // Patient search filter — client-side, works for up to 500 patients
+  const totalDiscount = round(itemsDiscount + parsedInvoiceDiscount)
+  const totalTax = round(itemsTax + parsedInvoiceTax)
+  const grandTotal = Math.max(0, round(itemsSubtotal - totalDiscount + totalTax))
+  const balanceDue = Math.max(0, round(grandTotal - parsedAmountPaid))
+
+  const addItem = () => setItems((prev) => [...prev, emptyItem()])
+
+  const removeItem = (index: number) => {
+    if (items.length <= 1) return
+    setItems((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const updateItem = (index: number, patch: Partial<InvoiceItemInput>) => {
+    setItems((prev) =>
+      prev.map((it, i) => (i === index ? { ...it, ...patch } : it))
+    )
+  }
+
+  const selectedPatient = patients.find((p) => p.id === patientId)
+
   const filteredPatients = React.useMemo(() => {
     const q = patientSearch.toLowerCase().trim()
     if (!q) return patients
     return patients.filter(
       (p) =>
         p.fullName.toLowerCase().includes(q) ||
-        p.phone.toLowerCase().includes(q),
+        p.phone.includes(q) ||
+        (p.email && p.email.toLowerCase().includes(q))
     )
   }, [patients, patientSearch])
 
-  const selectedPatient = patients.find((p) => p.id === patientId)
-
-  function updateItem(index: number, patch: Partial<InvoiceItemInput>) {
-    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)))
-  }
-
-  function addItem() {
-    setItems((prev) => [...prev, emptyItem()])
-  }
-
-  function removeItem(index: number) {
-    setItems((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)))
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
@@ -218,36 +224,46 @@ export function InvoiceDialog({
       return
     }
 
-    const validItems = items.filter((item) => item.description.trim())
-    if (validItems.length === 0) {
-      setError("Add at least one line item with a description.")
+    if (items.length === 0 || items.some((it) => !it.description.trim())) {
+      setError("All line items must have a description.")
       return
     }
 
-    const payload = {
-      patientId,
-      doctorMembershipId: doctorMembershipId === "none" ? null : doctorMembershipId,
-      discount: invDiscount,
-      tax: invTax,
-      amountPaid: parseFloat(amountPaid) || 0,
-      notes: notes.trim() || null,
-      paymentMethod: paymentMethod === "none" ? null : paymentMethod,
-      items: validItems,
+    if (items.some((it) => it.quantity <= 0)) {
+      setError("Item quantity must be at least 1.")
+      return
     }
 
     try {
       setIsSubmitting(true)
-      const url = mode === "edit" && invoiceId ? `/api/billing/${invoiceId}` : "/api/billing"
-      const method = mode === "edit" ? "PATCH" : "POST"
+
+      const payload = {
+        patientId,
+        doctorMembershipId:
+          doctorMembershipId === "none" ? undefined : doctorMembershipId,
+        items,
+        discount: parsedInvoiceDiscount,
+        tax: parsedInvoiceTax,
+        amountPaid: parsedAmountPaid,
+        paymentMethod: paymentMethod === "none" ? undefined : paymentMethod,
+        notes: notes.trim() || undefined,
+      }
+
+      const url =
+        mode === "edit" && invoiceId ? `/api/billing/${invoiceId}` : "/api/billing"
+      const method = mode === "edit" ? "PUT" : "POST"
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
+
       const json = await res.json()
       if (!res.ok) {
         throw new Error(json.error?.message ?? "Failed to save invoice")
       }
+
       onOpenChange(false)
       onSuccess?.()
     } catch (err) {
@@ -259,304 +275,367 @@ export function InvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-160 p-0 flex flex-col max-h-[95vh] overflow-y-scroll border-border/50 rounded-xl">
-        <DialogHeader className="p-6 pb-0 shrink-0">
-          <DialogTitle className="text-lg flex items-center gap-2">
-            <FileSpreadsheet className="text-primary" size={20} />
-            {mode === "add" ? "Create Invoice" : "Edit Invoice"}
+      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden border-border/60 rounded-xl p-0 shadow-lg sm:max-w-2xl">
+        <DialogHeader className="p-6 pb-4 border-b border-border/40 shrink-0">
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            {mode === "add" ? "New Invoice" : "Edit Invoice"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs text-muted-foreground">
             {isLocked
-              ? "This invoice is finalized and cannot be edited structurally."
-              : "Add line items and patient details. Totals are calculated automatically."}
+              ? "This invoice is finalized and locked for editing."
+              : mode === "add"
+              ? "Draft a new invoice for patient consultations, procedures, or prescriptions."
+              : "Update line items and amounts for this draft invoice."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="flex-1">
-            <div className="grid gap-4 p-6">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="p-6 space-y-6">
               {error && (
-                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/25 p-3 rounded-lg font-medium">
+                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/25 p-3 rounded-lg font-medium leading-relaxed">
                   {error}
                 </div>
               )}
 
-              {isLocked ? (
-                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-3 rounded-lg">
-                  Only draft invoices can be edited. Use Record Payment or view details for finalized invoices.
-                </div>
-              ) : null}
+              {/* Section 1: Patient and Doctor */}
+              <div className="space-y-4">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                  Patient & Practitioner
+                </span>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Patient Picker */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">
+                      Patient <span className="text-destructive">*</span>
+                    </Label>
+                    <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            disabled={isLocked || isSubmitting}
+                            className={cn(
+                              "w-full justify-between h-9 text-xs font-normal bg-background",
+                              !patientId && "text-muted-foreground"
+                            )}
+                            aria-label="Select patient"
+                          >
+                            <span className="truncate">
+                              {selectedPatient
+                                ? `${selectedPatient.fullName} (${selectedPatient.phone})`
+                                : "Select a patient..."}
+                            </span>
+                            <Search className="ml-2 size-3.5 shrink-0 opacity-50" />
+                          </Button>
+                        }
+                      />
+                      <PopoverContent className="w-[320px] p-0" align="start">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search patient name or phone..."
+                            value={patientSearch}
+                            onValueChange={setPatientSearch}
+                            className="h-9 text-xs"
+                          />
+                          <CommandList>
+                            <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
+                              No patients found.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {filteredPatients.map((p) => (
+                                <CommandItem
+                                  key={p.id}
+                                  value={p.id}
+                                  onSelect={() => {
+                                    setPatientId(p.id)
+                                    setPatientSearch("")
+                                    setPatientPopoverOpen(false)
+                                  }}
+                                  className="text-xs"
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 size-3.5",
+                                      patientId === p.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-medium truncate text-foreground">{p.fullName}</span>
+                                    <span className="text-xs text-muted-foreground tabular-nums">{p.phone}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {/* Patient — searchable combobox */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Patient *</Label>
-                  <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
-                    <PopoverTrigger>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={patientPopoverOpen}
-                        className="w-full justify-between h-10 bg-background font-normal text-sm"
-                        disabled={isLocked || isSubmitting}
-                      >
-                        {selectedPatient ? (
-                          <span className="truncate">
-                            {selectedPatient.fullName}
-                            <span className="ml-1 text-muted-foreground text-xs">({selectedPatient.phone})</span>
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">Search patient…</span>
-                        )}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0" align="start">
-                      <Command shouldFilter={false}>
-                        <CommandInput
-                          placeholder="Search by name or phone…"
-                          value={patientSearch}
-                          onValueChange={setPatientSearch}
-                          className="h-9"
+                  {/* Doctor Picker */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">Doctor (Optional)</Label>
+                    <Select
+                      value={doctorMembershipId}
+                      onValueChange={(val) => setDoctorMembershipId(val ?? "none")}
+                      disabled={isLocked || isSubmitting}
+                    >
+                      <SelectTrigger className="h-9 bg-background text-xs" aria-label="Select doctor">
+                        <SelectValue placeholder="No doctor assigned" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No doctor assigned</SelectItem>
+                        {doctors.map((doc) => (
+                          <SelectItem key={doc.membershipId} value={doc.membershipId} className="text-xs">
+                            {doc.user?.fullName ?? doc.invitedEmail}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Line Items */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Line Items
+                  </span>
+                  {!isLocked && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addItem}
+                      className="h-7 text-xs gap-1"
+                    >
+                      <Plus className="size-3" />
+                      <span>Add item</span>
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-2.5">
+                  {items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="grid gap-2 p-3 rounded-lg border border-border/60 bg-muted/20"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Item description (e.g. General Consultation)"
+                          value={item.description}
+                          onChange={(e) => updateItem(index, { description: e.target.value })}
+                          disabled={isLocked}
+                          className="flex-1 h-9 text-xs bg-background"
+                          required
+                          aria-label={`Item ${index + 1} description`}
                         />
-                        <CommandList>
-                          <CommandEmpty className="py-4 text-center text-xs text-muted-foreground flex flex-col items-center gap-1">
-                            <Search className="h-4 w-4 opacity-40" />
-                            No patients found
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {filteredPatients.map((p) => (
-                              <CommandItem
-                                key={p.id}
-                                value={p.id}
-                                onSelect={() => {
-                                  setPatientId(p.id)
-                                  setPatientSearch("")
-                                  setPatientPopoverOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    patientId === p.id ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-sm font-medium truncate">{p.fullName}</span>
-                                  <span className="text-xs text-muted-foreground">{p.phone}</span>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                        {!isLocked && items.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => removeItem(index)}
+                            aria-label={`Remove item ${index + 1}`}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground font-medium uppercase">Qty</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, { quantity: parseInt(e.target.value, 10) || 1 })}
+                            disabled={isLocked}
+                            className="h-8 text-xs bg-background tabular-nums"
+                            aria-label={`Item ${index + 1} quantity`}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground font-medium uppercase">Unit price (₹)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.unitPrice}
+                            onChange={(e) => updateItem(index, { unitPrice: parseFloat(e.target.value) || 0 })}
+                            disabled={isLocked}
+                            className="h-8 text-xs bg-background tabular-nums"
+                            aria-label={`Item ${index + 1} unit price`}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground font-medium uppercase">Discount (₹)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.discount ?? 0}
+                            onChange={(e) => updateItem(index, { discount: parseFloat(e.target.value) || 0 })}
+                            disabled={isLocked}
+                            className="h-8 text-xs bg-background tabular-nums"
+                            aria-label={`Item ${index + 1} discount`}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground font-medium uppercase">Tax (₹)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.tax ?? 0}
+                            onChange={(e) => updateItem(index, { tax: parseFloat(e.target.value) || 0 })}
+                            disabled={isLocked}
+                            className="h-8 text-xs bg-background tabular-nums"
+                            aria-label={`Item ${index + 1} tax`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 3: Adjustments & Payment */}
+              <div className="space-y-4">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                  Invoice Adjustments & Payment
+                </span>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">Invoice Discount (₹)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={invoiceDiscount}
+                      onChange={(e) => setInvoiceDiscount(e.target.value)}
+                      disabled={isLocked}
+                      className="h-9 text-xs bg-background tabular-nums"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">Invoice Tax (₹)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={invoiceTax}
+                      onChange={(e) => setInvoiceTax(e.target.value)}
+                      disabled={isLocked}
+                      className="h-9 text-xs bg-background tabular-nums"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-foreground">Amount Paid (₹)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={amountPaid}
+                      onChange={(e) => setAmountPaid(e.target.value)}
+                      disabled={isLocked}
+                      className="h-9 text-xs bg-background tabular-nums"
+                    />
+                  </div>
                 </div>
 
-                {/* Doctor */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Doctor</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-foreground">Payment Method</Label>
                   <Select
-                    value={doctorMembershipId}
-                    onValueChange={(val) => setDoctorMembershipId(val ?? "none")}
-                    disabled={isLocked || isSubmitting}
+                    value={paymentMethod}
+                    onValueChange={(val) => setPaymentMethod(val ?? "none")}
+                    disabled={isLocked}
                   >
-                    <SelectTrigger className="h-10 bg-background">
-                      <SelectValue placeholder="Optional" />
+                    <SelectTrigger className="h-9 bg-background text-xs" aria-label="Payment method">
+                      <SelectValue placeholder="Not specified" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">No doctor assigned</SelectItem>
-                      {doctors.map((doc) => (
-                        <SelectItem key={doc.membershipId} value={doc.membershipId}>
-                          {doc.user?.fullName ?? doc.invitedEmail}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="none">Not specified</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Card">Card</SelectItem>
+                      <SelectItem value="UPI">UPI</SelectItem>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="Insurance">Insurance</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* Line Items */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Line Items</Label>
-                  {!isLocked && (
-                    <Button type="button" variant="outline" size="sm" onClick={addItem} className="h-8 text-xs gap-1">
-                      <Plus className="h-3.5 w-3.5" />
-                      Add Item
-                    </Button>
-                  )}
-                </div>
-
-                {items.map((item, index) => (
-                  <div key={index} className="grid gap-2 p-3 rounded-lg border border-border/50 bg-muted/20">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Description"
-                        value={item.description}
-                        onChange={(e) => updateItem(index, { description: e.target.value })}
-                        disabled={isLocked}
-                        className="flex-1 h-9 text-sm"
-                        required
-                      />
-                      {!isLocked && items.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 shrink-0 text-destructive"
-                          onClick={() => removeItem(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium uppercase">Qty</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(index, { quantity: parseInt(e.target.value, 10) || 1 })}
-                          disabled={isLocked}
-                          className="h-9 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium uppercase">Unit Price (₹)</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          placeholder="0.00"
-                          value={item.unitPrice}
-                          onChange={(e) => updateItem(index, { unitPrice: parseFloat(e.target.value) || 0 })}
-                          disabled={isLocked}
-                          className="h-9 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium uppercase">Discount (₹)</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          placeholder="0.00"
-                          value={item.discount ?? 0}
-                          onChange={(e) => updateItem(index, { discount: parseFloat(e.target.value) || 0 })}
-                          disabled={isLocked}
-                          className="h-9 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium uppercase">Tax (₹)</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          placeholder="0.00"
-                          value={item.tax ?? 0}
-                          onChange={(e) => updateItem(index, { tax: parseFloat(e.target.value) || 0 })}
-                          disabled={isLocked}
-                          className="h-9 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Invoice-level adjustments */}
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Invoice Discount (₹)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={invoiceDiscount}
-                    onChange={(e) => setInvoiceDiscount(e.target.value)}
-                    disabled={isLocked}
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Invoice Tax (₹)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={invoiceTax}
-                    onChange={(e) => setInvoiceTax(e.target.value)}
-                    disabled={isLocked}
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-muted-foreground">Amount Paid (₹)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={amountPaid}
-                    onChange={(e) => setAmountPaid(e.target.value)}
-                    disabled={isLocked}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase text-muted-foreground">Payment Method</Label>
-                <Select 
-                  value={paymentMethod} 
-                  onValueChange={(val) => setPaymentMethod(val ?? "none")} 
-                  disabled={isLocked}
-                >
-                  <SelectTrigger className="h-9 bg-background">
-                    <SelectValue placeholder="Optional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Not specified</SelectItem>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Card">Card</SelectItem>
-                    <SelectItem value="UPI">UPI</SelectItem>
-                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Insurance">Insurance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
+              {/* Section 4: Notes */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-foreground">Notes & Instructions</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={isLocked}
-                  placeholder="Optional notes for this invoice"
-                  className="min-h-[72px] resize-none text-sm"
+                  placeholder="Optional notes or payment instructions..."
+                  className="min-h-[64px] resize-none text-xs bg-background"
                 />
               </div>
 
-              {/* Grand Total display */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/10">
-                <span className="text-sm font-semibold text-muted-foreground">Grand Total</span>
-                <span className="text-xl font-bold text-primary">{formatINR(grandTotal)}</span>
+              {/* Section 5: Totals Summary Block */}
+              <div className="p-4 rounded-lg bg-muted/40 border border-border/60 space-y-2 text-xs">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Items subtotal</span>
+                  <span className="tabular-nums font-medium text-foreground">{formatINR(itemsSubtotal)}</span>
+                </div>
+                {totalDiscount > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Total discount</span>
+                    <span className="tabular-nums font-medium text-foreground">-{formatINR(totalDiscount)}</span>
+                  </div>
+                )}
+                {totalTax > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Total tax</span>
+                    <span className="tabular-nums font-medium text-foreground">+{formatINR(totalTax)}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-border/60 flex items-center justify-between text-sm">
+                  <span className="font-semibold text-foreground">Grand Total</span>
+                  <span className="text-base font-semibold text-foreground tabular-nums">
+                    {formatINR(grandTotal)}
+                  </span>
+                </div>
+                {parsedAmountPaid > 0 && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                    <span>Amount paid</span>
+                    <span className="tabular-nums font-medium text-foreground">{formatINR(parsedAmountPaid)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                  <span className="font-medium text-muted-foreground">Balance due</span>
+                  <span className={cn("tabular-nums font-semibold", balanceDue > 0 ? "text-warning" : "text-muted-foreground")}>
+                    {formatINR(balanceDue)}
+                  </span>
+                </div>
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
-          <DialogFooter className="bg-muted/30 p-6 pt-4 border-t border-border/50 shrink-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="bg-muted/30 p-4 border-t border-border/40 flex items-center justify-end gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              className="h-9 text-xs"
+            >
               Cancel
             </Button>
             {!isLocked && (
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" size="sm" disabled={isSubmitting} className="h-9 text-xs">
                 {isSubmitting ? "Saving..." : mode === "add" ? "Create Invoice" : "Save Changes"}
               </Button>
             )}
