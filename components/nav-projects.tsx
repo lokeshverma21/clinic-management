@@ -1,23 +1,15 @@
 "use client"
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar"
-import { MoreHorizontal, Folder, Forward, Trash2 } from "lucide-react"
-import Link from "next/link"
 
 export function NavProjects({
   projects,
@@ -28,59 +20,37 @@ export function NavProjects({
     icon: React.ReactNode
   }[]
 }) {
-  const { isMobile } = useSidebar()
+  const pathname = usePathname()
+
   return (
     <SidebarGroup>
-        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-          Navigation
-        </SidebarGroupLabel>
-      <SidebarMenu>
-        {projects.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton render={<Link href={item.url} />}>
-              {item.icon}
-              <span>{item.name}</span>
-            </SidebarMenuButton>
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuAction
-                    showOnHover
-                    className="aria-expanded:bg-muted"
-                  />
+      <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80 px-2 py-1.5">
+        Management
+      </SidebarGroupLabel>
+      <SidebarMenu className="gap-1">
+        {projects.map((item) => {
+          const isActive =
+            pathname === item.url ||
+            (item.url !== "/dashboard" && pathname.startsWith(item.url))
+
+          return (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton
+                render={<Link href={item.url} />}
+                isActive={isActive}
+                tooltip={item.name}
+                className={
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium hover:bg-primary/15 hover:text-primary transition-colors"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
                 }
               >
-                <MoreHorizontal />
-                <span className="sr-only">More</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-fit"
-                side={isMobile ? "bottom" : "right"}
-                align={isMobile ? "end" : "start"}
-              >
-                <DropdownMenuItem>
-                  <Folder />
-                  <span>View Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Forward />
-                  <span>Share Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
-                  <Trash2 />
-                  <span>Delete Project</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
-          </SidebarMenuItem>
-        ))}
-        {/* <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontal className="text-sidebar-foreground/70" />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem> */}
+                {item.icon}
+                <span className="text-xs">{item.name}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )
+        })}
       </SidebarMenu>
     </SidebarGroup>
   )
