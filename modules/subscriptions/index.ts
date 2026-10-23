@@ -1,4 +1,5 @@
 export * as subscriptionsService from './subscriptions.service';
+export { getSubscriptionPlans } from './subscriptions.service';
 export { CHECKOUT_PLANS } from './subscriptions.plans';
 export { startSubscriptionSchema, returnQuerySchema, manageSubscriptionSchema } from './subscriptions.validation';
 export type {

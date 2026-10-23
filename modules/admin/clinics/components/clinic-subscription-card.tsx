@@ -1,9 +1,10 @@
-"use client"
-
 import * as React from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { format } from "date-fns"
-import { CreditCard, Calendar, CheckCircle2, AlertTriangle, Key } from "lucide-react"
+import { CreditCard, Calendar, CheckCircle2, AlertTriangle, Key, ArrowUpRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { AdminClinicSubscriptionSummary, ClinicStatus } from "../clinics.types"
 
@@ -11,14 +12,18 @@ interface ClinicSubscriptionCardProps {
   subscription: AdminClinicSubscriptionSummary | null;
   clinicStatus: ClinicStatus;
   trialEndsAt: Date | null;
+  clinicId?: string;
 }
 
 export function ClinicSubscriptionCard({
   subscription,
   clinicStatus,
   trialEndsAt,
+  clinicId,
 }: ClinicSubscriptionCardProps) {
   const isTrial = clinicStatus === "trial";
+  const params = useParams<{ clinicId?: string }>();
+  const effectiveClinicId = clinicId ?? params?.clinicId;
 
   return (
     <Card className="shadow-none border-border/60">
@@ -95,6 +100,20 @@ export function ClinicSubscriptionCard({
                 <span>Trial ends: {format(new Date(trialEndsAt), "MMMM d, yyyy")}</span>
               </div>
             )}
+          </div>
+        )}
+
+        {subscription && effectiveClinicId && (
+          <div className="pt-2 border-t border-border/50 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 -mr-2"
+              render={<Link href={`/admin/subscriptions/${effectiveClinicId}`} />}
+            >
+              <span>View subscription</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Button>
           </div>
         )}
       </CardContent>
