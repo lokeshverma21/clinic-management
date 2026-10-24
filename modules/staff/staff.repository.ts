@@ -76,6 +76,18 @@ export async function insertInvitedMembership(
   return membership;
 }
 
+export async function deleteInvitedMembership(clinicId: string, membershipId: string): Promise<void> {
+  await db
+    .delete(memberships)
+    .where(
+      and(
+        eq(memberships.clinicId, clinicId),
+        eq(memberships.id, membershipId),
+        eq(memberships.status, 'invited'),
+      ),
+    );
+}
+
 export async function updateMembership(
   clinicId: string,
   membershipId: string,

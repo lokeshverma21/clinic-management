@@ -2,7 +2,11 @@
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '@/lib/errors/app-error';
 import type { RequestContext } from '@/lib/auth/request-context';
 import { assertClinicWritable } from '@/lib/auth/clinic-access.service';
-import { sendStaffInvitation } from '@/lib/auth/clerk-invitations';
+import {
+  sendStaffInvitation,
+  mapClerkErrorToUserMessage,
+  maskEmail,
+} from '@/lib/auth/clerk-invitations';
 import { countUpcomingAppointmentsForMembership } from '@/modules/appointments';
 import * as staffRepository from './staff.repository';
 import type {
@@ -62,16 +66,20 @@ export async function inviteStaff(ctx: RequestContext, input: InviteStaffInput):
   try {
     await sendStaffInvitation({ emailAddress: input.email, membershipId: membership.id });
   } catch (error) {
-    // The membership row is kept either way so the owner can see the
-    // failed invite in the staff list and retry — Clerk's own
-    // duplicate-email rejection surfaces here as a normal failure, not a
-    // crash, and doesn't leave an orphaned Clerk-side invite with no
-    // matching membership record.
-    console.error('Failed to send Clerk invitation', error);
-    throw new ConflictError(
-      'INVITE_SEND_FAILED',
-      'Could not send the invitation email — the address may already be registered with Clerk',
+    try {
+      await staffRepository.deleteInvitedMembership(ctx.clinicId, membership.id);
+    } catch (cleanupError) {
+      console.error(
+        `[staff-invite] clinicId="${ctx.clinicId}" step="cleanup-orphan-membership" error="${cleanupError instanceof Error ? cleanupError.message : 'unknown'}"`,
+      );
+    }
+
+    const mapped = mapClerkErrorToUserMessage(error);
+    console.error(
+      `[staff-invite] clinicId="${ctx.clinicId}" step="send-clerk-invitation" status=${mapped.status} codes="${mapped.codes.join(', ')}" messages="${mapped.messages.join(' | ')}" email="${maskEmail(input.email)}"`,
     );
+
+    throw new ConflictError('INVITE_SEND_FAILED', mapped.message);
   }
 
   return membership;
