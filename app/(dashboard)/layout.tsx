@@ -15,6 +15,10 @@ import { Show, UserButton } from "@clerk/nextjs";
 import Script from "next/script";
 import { ClinicStatusBanner } from "@/modules/subscriptions";
 
+import { ForbiddenError, UnauthenticatedError } from "@/lib/errors/app-error";
+import { NoMembershipView } from "@/app/(auth)/continue/no-membership-view";
+import { StaffPendingOnboardingView } from "@/app/(auth)/continue/staff-pending-onboarding-view";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -23,14 +27,37 @@ export default async function DashboardLayout({
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  const ctx = await getRequestContext();
+  let ctx;
+  try {
+    ctx = await getRequestContext();
+  } catch (err) {
+    if (err instanceof ForbiddenError && err.code === "NO_ACTIVE_MEMBERSHIP") {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+          <NoMembershipView />
+        </div>
+      );
+    }
+    if (err instanceof UnauthenticatedError) {
+      redirect("/continue");
+    }
+    throw err;
+  }
 
   const clinic = await getClinicProfile(ctx);
   const notificationSettings = await getNotificationSettings(ctx);
 
   if (!clinic.onboardingCompletedAt) {
-    redirect("/onboarding/clinic");
+    if (ctx.role === "owner") {
+      redirect("/onboarding/clinic");
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <StaffPendingOnboardingView />
+      </div>
+    );
   }
+
 
   const sidebarUser = {
     name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "Clinic Member",

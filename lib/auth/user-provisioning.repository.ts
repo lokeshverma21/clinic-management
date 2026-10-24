@@ -1,5 +1,5 @@
 // /lib/auth/user-provisioning.repository.ts
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ilike } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { users, clinics, memberships } from '@/db/schema';
 import type { NewUser, NewClinic, NewMembership } from '@/db/schema';
@@ -17,6 +17,20 @@ export async function findMembershipById(membershipId: string) {
     .limit(1);
   return membership ?? null;
 }
+
+export async function findPendingMembershipsByEmail(email: string) {
+  return db
+    .select()
+    .from(memberships)
+    .where(and(ilike(memberships.invitedEmail, email), eq(memberships.status, 'invited')));
+}
+
+export async function createUserWithoutMembership(user: NewUser) {
+  const [created] = await db.insert(users).values(user).returning();
+  return created;
+}
+
+
 
 export async function updateUserByClerkId(clerkUserId: string, patch: Partial<NewUser>) {
   const [user] = await db

@@ -3,6 +3,8 @@ import type { ClerkWebhookEvent, ClerkUserEventData } from './user-provisioning.
 import {
   findUserByClerkId,
   findMembershipById,
+  findPendingMembershipsByEmail,
+  createUserWithoutMembership,
   updateUserByClerkId,
   createUserWithOwnerClinic,
   createUserAndActivateMembership,
@@ -17,6 +19,21 @@ function primaryEmail(data: ClerkUserEventData): string {
   }
   return email;
 }
+
+function primaryEmailObj(data: ClerkUserEventData) {
+  const match = data.email_addresses.find((e) => e.id === data.primary_email_address_id);
+  return match ?? data.email_addresses[0];
+}
+
+function isEmailVerified(emailObj: unknown): boolean {
+  if (typeof emailObj !== 'object' || emailObj === null) return false;
+  const candidate = emailObj as Record<string, unknown>;
+  const verification = candidate.verification;
+  if (typeof verification !== 'object' || verification === null) return false;
+  return (verification as Record<string, unknown>).status === 'verified';
+}
+
+
 
 function primaryPhone(data: ClerkUserEventData): string | null {
   const match = data.phone_numbers.find((p) => p.id === data.primary_phone_number_id);
@@ -52,34 +69,75 @@ function slugify(input: string): string {
  *   clinic name/timezone afterwards via the Clinic Profile module
  *   (Part 9) — the defaults below are deliberately provisional.
  */
-export async function handleUserCreated(data: ClerkUserEventData) {
-  const existing = await findUserByClerkId(data.id);
+const defaultDeps = {
+  findUserByClerkId,
+  findMembershipById,
+  findPendingMembershipsByEmail,
+  createUserWithoutMembership,
+  createUserAndActivateMembership,
+  createUserWithOwnerClinic,
+};
+
+export type UserProvisioningDeps = typeof defaultDeps;
+
+export async function handleUserCreated(
+  data: ClerkUserEventData,
+  deps: UserProvisioningDeps = defaultDeps,
+) {
+  const existing = await deps.findUserByClerkId(data.id);
   if (existing) {
     // Svix retries deliveries — this must be a safe no-op (Part 17).
     return { status: 'already_processed' as const };
   }
 
+  const emailObj = primaryEmailObj(data);
   const email = primaryEmail(data);
   const phone = primaryPhone(data);
   const name = fullName(data);
   const membershipId = data.public_metadata?.membershipId;
 
   if (typeof membershipId === 'string') {
-    const membership = await findMembershipById(membershipId);
+    const membership = await deps.findMembershipById(membershipId);
     if (!membership) {
       throw new Error(
         `No membership found for id ${membershipId} referenced by Clerk user ${data.id}`,
       );
     }
 
-    const result = await createUserAndActivateMembership({
+    const result = await deps.createUserAndActivateMembership({
       user: { clerkUserId: data.id, fullName: name, email, phone },
       membershipId,
     });
     return { status: 'staff_joined' as const, ...result };
   }
 
-  const result = await createUserWithOwnerClinic({
+  // Fallback: check pending memberships by email ONLY when email is verified
+  if (isEmailVerified(emailObj)) {
+    const pendingMatches = await deps.findPendingMembershipsByEmail(email);
+
+    if (pendingMatches.length === 1) {
+      const result = await deps.createUserAndActivateMembership({
+        user: { clerkUserId: data.id, fullName: name, email, phone },
+        membershipId: pendingMatches[0].id,
+      });
+      return { status: 'staff_joined' as const, ...result };
+    }
+
+    if (pendingMatches.length > 1) {
+      console.error(
+        `[user-provisioning] clerkUserId="${data.id}" multiple pending memberships found: count=${pendingMatches.length}`,
+      );
+      const user = await deps.createUserWithoutMembership({
+        clerkUserId: data.id,
+        fullName: name,
+        email,
+        phone,
+      });
+      return { status: 'ambiguous_membership' as const, user };
+    }
+  }
+
+  const result = await deps.createUserWithOwnerClinic({
     user: { clerkUserId: data.id, fullName: name, email, phone },
     clinic: {
       name: `${name}'s Clinic`,
