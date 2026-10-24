@@ -10,6 +10,7 @@ import {
   handleAppointmentCanceled,
 } from '@/modules/notifications';
 import { SlotConflictDbError } from './appointment.repository';
+import { startOfIstDay, endOfIstDay } from '@/lib/time/ist';
 import type {
   Appointment,
   CreateAppointmentInput,
@@ -31,8 +32,8 @@ export async function listAppointments(
   ctx: RequestContext,
   filters: ListAppointmentsFilters,
 ): Promise<ListAppointmentsResult> {
-  const from = new Date(`${filters.from}T00:00:00.000Z`);
-  const to = new Date(`${filters.to}T23:59:59.999Z`);
+  const from = startOfIstDay(filters.from);
+  const to = endOfIstDay(filters.to);
 
   if (from > to) {
     throw new BadRequestError('INVALID_DATE_RANGE', '`from` must be before or equal to `to`');

@@ -1,7 +1,7 @@
 // modules/admin/dashboard/components/trials-ending-list.tsx
 import * as React from 'react';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatIstDate } from '@/lib/time';
 import { CalendarClock, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +65,7 @@ export function TrialsEndingList({ trials }: TrialsEndingListProps) {
                       {t.clinicName}
                     </Link>
                     <p className="text-[11px] text-muted-foreground font-mono">
-                      Ends: {format(new Date(t.trialEndsAt), 'MMM d, yyyy')}
+                      Ends: {formatIstDate(t.trialEndsAt, 'MMM d, yyyy')}
                     </p>
                   </div>
                   <Badge

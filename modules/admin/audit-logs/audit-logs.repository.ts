@@ -3,6 +3,7 @@ import { and, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { platformAuditLogs, platformUsers, clinics } from '@/db/schema';
 import type { PlatformAuditLog, NewPlatformAuditLog } from '@/db/schema';
+import { startOfIstDay, endOfIstDay } from '@/lib/time';
 import type { ListAuditLogsFilters, AdminAuditLogWithActor } from './audit-logs.types';
 
 /** The Drizzle transaction type — avoids `any` on the `tx` parameter. */
@@ -52,18 +53,14 @@ export async function listPlatformAuditLogs(
   }
 
   if (filters.from) {
-    const fromDate = new Date(
-      filters.from.includes('T') ? filters.from : `${filters.from}T00:00:00.000Z`,
-    );
+    const fromDate = filters.from.includes('T') ? new Date(filters.from) : startOfIstDay(filters.from);
     if (!isNaN(fromDate.getTime())) {
       conditions.push(gte(platformAuditLogs.createdAt, fromDate));
     }
   }
 
   if (filters.to) {
-    const toDate = new Date(
-      filters.to.includes('T') ? filters.to : `${filters.to}T23:59:59.999Z`,
-    );
+    const toDate = filters.to.includes('T') ? new Date(filters.to) : endOfIstDay(filters.to);
     if (!isNaN(toDate.getTime())) {
       conditions.push(lte(platformAuditLogs.createdAt, toDate));
     }

@@ -34,7 +34,7 @@ import {
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card"
 import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
-import { PatientProfileHeader, calculateAge, formatGender } from "./patient-profile-header"
+import { PatientProfileHeader, formatGender } from "./patient-profile-header"
 import { PatientSummaryStats } from "./patient-summary-stats"
 import { PatientAppointmentHistory } from "./patient-appointment-history"
 import { PatientInvoicesList } from "./patient-invoices-list"
@@ -42,7 +42,7 @@ import { PatientNotesModal } from "./patient-notes-modal"
 import { PatientDialog } from "./patient-dialog"
 import { AppointmentDialog } from "@/modules/appointments/components/appointment-dialog"
 import { AppointmentDetailsSheet } from "@/modules/appointments/components/appointment-details-sheet"
-import { format } from "date-fns"
+import { ageFromDateOnly, formatDateOnly, formatIstDate, formatIstDateTime } from "@/lib/time"
 import type { Patient } from "../patients.types"
 import type { AppointmentWithDetails } from "@/modules/appointments/appointment.types"
 import type { InvoiceWithDetails } from "@/modules/billing/billing.types"
@@ -171,9 +171,9 @@ export function PatientDetailsView({
     setIsBookDialogOpen(true)
   }
 
-  const age = calculateAge(patient.dateOfBirth)
+  const age = ageFromDateOnly(patient.dateOfBirth)
   const formattedDob = patient.dateOfBirth
-    ? `${format(new Date(patient.dateOfBirth), "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}`
+    ? `${formatDateOnly(patient.dateOfBirth, "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}`
     : "Not specified"
 
   return (
@@ -317,12 +317,12 @@ export function PatientDetailsView({
                 />
                 <DashboardDetailRow
                   label="Registered on"
-                  value={format(new Date(patient.createdAt), "d MMM yyyy, h:mm a")}
+                  value={formatIstDateTime(patient.createdAt)}
                   tabular
                 />
                 <DashboardDetailRow
                   label="Last updated"
-                  value={format(new Date(patient.updatedAt), "d MMM yyyy, h:mm a")}
+                  value={formatIstDateTime(patient.updatedAt)}
                   tabular
                 />
               </div>
@@ -390,7 +390,7 @@ export function PatientDetailsView({
               )}
               <div className="mt-3 text-[11px] text-muted-foreground flex items-center gap-1 tabular-nums">
                 <Clock className="size-3" />
-                <span>Last updated: {format(new Date(patient.updatedAt), "d MMM yyyy")}</span>
+                <span>Last updated: {formatIstDate(patient.updatedAt, "d MMM yyyy")}</span>
               </div>
             </DashboardSectionCard>
 
@@ -421,7 +421,7 @@ export function PatientDetailsView({
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/30 pb-2 text-xs">
                           <div className="font-medium text-foreground flex items-center gap-2 tabular-nums">
-                            <span>{format(new Date(app.startTime), "d MMM yyyy, h:mm a")}</span>
+                            <span>{formatIstDateTime(app.startTime)}</span>
                             <StatusBadge type="appointment" status={app.status} />
                           </div>
                           <div className="text-muted-foreground flex items-center gap-1">

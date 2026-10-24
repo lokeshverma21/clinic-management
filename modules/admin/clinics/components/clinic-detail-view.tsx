@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import {
   Building2,
   ChevronLeft,
@@ -130,13 +130,13 @@ export function ClinicDetailView({ clinicId, canWrite }: ClinicDetailViewProps) 
                 {clinic.timezone}
               </span>
               <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                Created {format(new Date(clinic.createdAt), "MMM d, yyyy")}
+                <Calendar className="h-3.5 w-3.5" />
+                Created {formatIstDate(clinic.createdAt, "MMM d, yyyy")}
               </span>
               {clinic.pastDueSince && (
                 <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
-                  <Clock className="h-3 w-3" />
-                  Past due since {format(new Date(clinic.pastDueSince), "MMM d, yyyy")}
+                  <Clock className="h-3.5 w-3.5" />
+                  Past due since {formatIstDate(clinic.pastDueSince, "MMM d, yyyy")}
                 </span>
               )}
             </div>

@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { format } from "date-fns"
+import { formatIstTime } from "@/lib/time/ist"
 import type { AppointmentWithDetails } from "../appointment.types"
 
 interface AppointmentTableProps {
@@ -167,7 +167,7 @@ export function AppointmentTable({
           </TableHeader>
           <TableBody>
             {appointments.map((apt) => {
-              const timeFormatted = format(new Date(apt.startTime), "h:mm a")
+              const timeFormatted = formatIstTime(apt.startTime)
               const isCompletedOrCanceled = apt.status === "completed" || apt.status === "canceled"
 
               return (

@@ -34,7 +34,7 @@ import { ClinicLogoUpload } from "./clinic-logo-upload"
 import { OperatingHoursEditor } from "./operating-hours-editor"
 import { ClinicProfileLoading } from "./clinic-profile-loading"
 import { ClinicProfileError } from "./clinic-profile-error"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import type { ClinicProfile } from "../clinic-profile.types"
 
 interface ClinicProfileFormProps {
@@ -173,14 +173,14 @@ export function ClinicProfileForm({ mode, canEdit = true }: ClinicProfileFormPro
             {profile.onboardingCompletedAt && (
               <DashboardDetailRow
                 label="Registered Date"
-                value={format(new Date(profile.onboardingCompletedAt), "d MMM yyyy")}
+                value={formatIstDate(profile.onboardingCompletedAt, "d MMM yyyy")}
                 icon={Calendar}
               />
             )}
             {profile.trialEndsAt && (
               <DashboardDetailRow
                 label="Trial Valid Until"
-                value={format(new Date(profile.trialEndsAt), "d MMM yyyy")}
+                value={formatIstDate(profile.trialEndsAt, "d MMM yyyy")}
                 icon={Clock}
               />
             )}

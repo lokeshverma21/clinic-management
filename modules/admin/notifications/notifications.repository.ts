@@ -5,6 +5,7 @@ import { and, desc, eq, gte, isNotNull, lt, lte, ne, sql, type SQL } from 'drizz
 import { db } from '@/db/client';
 import { clinics, notifications } from '@/db/schema';
 import { OVERDUE_NOTIFICATION_HOURS } from '@/lib/policy/notification-policy';
+import { startOfIstDay, endOfIstDay } from '@/lib/time';
 import type {
   ListNotificationsFilters,
   NotificationChannel,
@@ -85,18 +86,14 @@ export async function listNotifications(
   }
 
   if (filters.from) {
-    const fromDate = new Date(
-      filters.from.includes('T') ? filters.from : `${filters.from}T00:00:00.000Z`,
-    );
+    const fromDate = filters.from.includes('T') ? new Date(filters.from) : startOfIstDay(filters.from);
     if (!isNaN(fromDate.getTime())) {
       conditions.push(gte(notifications.scheduledFor, fromDate));
     }
   }
 
   if (filters.to) {
-    const toDate = new Date(
-      filters.to.includes('T') ? filters.to : `${filters.to}T23:59:59.999Z`,
-    );
+    const toDate = filters.to.includes('T') ? new Date(filters.to) : endOfIstDay(filters.to);
     if (!isNaN(toDate.getTime())) {
       conditions.push(lte(notifications.scheduledFor, toDate));
     }

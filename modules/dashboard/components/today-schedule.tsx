@@ -74,15 +74,13 @@ function StatusBadge({ status }: { status: AppointmentStatus }) {
   }
 }
 
+import { formatIstTime } from '@/lib/time/ist';
+
 /**
- * Formats a UTC ISO string to an HH:MM display string.
+ * Formats a UTC ISO string to an HH:MM display string in IST.
  */
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-IN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
+  return formatIstTime(iso);
 }
 
 export function TodaySchedule({ appointments }: TodayScheduleProps) {

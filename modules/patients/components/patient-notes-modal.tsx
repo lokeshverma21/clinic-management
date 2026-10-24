@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { format } from "date-fns"
+import { formatIstDateTime } from "@/lib/time"
 import type { AppointmentWithDetails } from "@/modules/appointments/appointment.types"
 
 type TargetNote =
@@ -110,7 +110,7 @@ export function PatientNotesModal({
             <div className="flex items-center justify-between text-muted-foreground">
               <span className="flex items-center gap-1 tabular-nums">
                 <Calendar className="size-3" />
-                {format(new Date(target.appointment.startTime), "d MMM yyyy, h:mm a")}
+                {formatIstDateTime(target.appointment.startTime)}
               </span>
               <span className="flex items-center gap-1 font-medium text-foreground">
                 <User className="size-3" />

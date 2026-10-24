@@ -23,7 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time/ist"
 import { cn } from "@/lib/utils"
 import type { StaffListItem } from "@/modules/staff"
 
@@ -118,7 +118,7 @@ export function AppointmentToolbar({
               >
                 <CalendarIcon className="mr-2 size-4 text-muted-foreground shrink-0" />
                 <span className="truncate tabular-nums">
-                  {date ? format(date, "EEE, d MMM yyyy") : "Pick a date"}
+                  {date ? formatIstDate(date, "EEE, d MMM yyyy") : "Pick a date"}
                 </span>
               </Button>
             }

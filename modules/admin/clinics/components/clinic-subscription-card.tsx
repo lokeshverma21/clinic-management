@@ -1,7 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import { CreditCard, Calendar, CheckCircle2, AlertTriangle, Key, ArrowUpRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -75,7 +75,7 @@ export function ClinicSubscriptionCard({
                 <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                 <span>
                   {subscription.currentPeriodEnd
-                    ? format(new Date(subscription.currentPeriodEnd), "MMM d, yyyy")
+                    ? formatIstDate(subscription.currentPeriodEnd, "MMM d, yyyy")
                     : "—"}
                 </span>
               </div>
@@ -97,7 +97,7 @@ export function ClinicSubscriptionCard({
             {isTrial && trialEndsAt && (
               <div className="flex items-center gap-1.5 text-foreground font-medium">
                 <Calendar className="h-3.5 w-3.5 text-blue-600" />
-                <span>Trial ends: {format(new Date(trialEndsAt), "MMMM d, yyyy")}</span>
+                <span>Trial ends: {formatIstDate(trialEndsAt, "MMMM d, yyyy")}</span>
               </div>
             )}
           </div>

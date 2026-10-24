@@ -32,7 +32,12 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { DashboardTimePicker } from "@/components/dashboard/dashboard-time-picker"
 import { DashboardPatientCombobox } from "@/components/dashboard/dashboard-patient-combobox"
-import { format } from "date-fns"
+import {
+  combineIstDateAndTime,
+  istTimeOfDay,
+  getIstParts,
+  formatIstDate,
+} from "@/lib/time/ist"
 import { cn } from "@/lib/utils"
 import type { Patient } from "@/modules/patients"
 import type { StaffListItem } from "@/modules/staff"
@@ -69,21 +74,22 @@ function buildInitialForm(
   initialPatientId?: string,
 ): FormState {
   if (mode === "edit" && appointment) {
-    const start = new Date(appointment.startTime)
-    const end = new Date(appointment.endTime)
+    const parts = getIstParts(appointment.startTime)
+    const localDateForPicker = new Date(parts.year, parts.month - 1, parts.day)
     return {
       patientId: appointment.patientId,
       doctorMembershipId: appointment.doctorMembershipId,
-      date: start,
-      startTime: format(start, "HH:mm"),
-      endTime: format(end, "HH:mm"),
+      date: localDateForPicker,
+      startTime: istTimeOfDay(appointment.startTime),
+      endTime: istTimeOfDay(appointment.endTime),
       notes: appointment.notes ?? "",
     }
   }
+  const todayParts = getIstParts(Date.now())
   return {
     patientId: initialPatientId ?? "",
     doctorMembershipId: "",
-    date: new Date(),
+    date: new Date(todayParts.year, todayParts.month - 1, todayParts.day),
     startTime: "09:00",
     endTime: "09:30",
     notes: "",
@@ -182,14 +188,9 @@ export function AppointmentDialog({
     if (!form.patientId) return setSubmitError("Please select a patient")
     if (!form.doctorMembershipId) return setSubmitError("Please select an attending doctor")
 
-    const [startHour, startMin] = form.startTime.split(":").map(Number)
-    const [endHour, endMin] = form.endTime.split(":").map(Number)
-
-    const start = new Date(form.date)
-    start.setHours(startHour, startMin, 0, 0)
-
-    const end = new Date(form.date)
-    end.setHours(endHour, endMin, 0, 0)
+    const dateKey = `${form.date.getFullYear()}-${String(form.date.getMonth() + 1).padStart(2, "0")}-${String(form.date.getDate()).padStart(2, "0")}`
+    const start = combineIstDateAndTime(dateKey, form.startTime)
+    const end = combineIstDateAndTime(dateKey, form.endTime)
 
     if (end <= start) return setSubmitError("End time must be after start time")
 
@@ -354,7 +355,7 @@ export function AppointmentDialog({
                         >
                           <CalendarIcon className="mr-2 size-4 text-muted-foreground shrink-0" />
                           {form.date ? (
-                            format(form.date, "PPP")
+                            formatIstDate(form.date, "MMMM d, yyyy")
                           ) : (
                             <span>Pick a date</span>
                           )}

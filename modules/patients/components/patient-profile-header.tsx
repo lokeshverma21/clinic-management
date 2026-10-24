@@ -17,7 +17,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { PatientAvatar } from "./patient-avatar"
-import { format } from "date-fns"
+import { ageFromDateOnly, formatDateOnly, formatIstDate } from "@/lib/time"
 import type { Patient } from "../patients.types"
 
 interface PatientProfileHeaderProps {
@@ -30,16 +30,7 @@ interface PatientProfileHeaderProps {
 }
 
 export function calculateAge(dateOfBirth: string | null | undefined): number | null {
-  if (!dateOfBirth) return null
-  const dob = new Date(dateOfBirth)
-  if (isNaN(dob.getTime())) return null
-  const today = new Date()
-  let age = today.getFullYear() - dob.getFullYear()
-  const m = today.getMonth() - dob.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-    age--
-  }
-  return age >= 0 ? age : null
+  return ageFromDateOnly(dateOfBirth)
 }
 
 export function formatGender(gender: string | null | undefined): string {
@@ -56,9 +47,9 @@ export function PatientProfileHeader({
 
   const age = calculateAge(patient.dateOfBirth)
   const formattedDob = patient.dateOfBirth
-    ? format(new Date(patient.dateOfBirth), "d MMM yyyy")
+    ? formatDateOnly(patient.dateOfBirth, "d MMM yyyy")
     : null
-  const formattedCreated = format(new Date(patient.createdAt), "d MMM yyyy")
+  const formattedCreated = formatIstDate(patient.createdAt, "d MMM yyyy")
 
   const copyPatientId = () => {
     navigator.clipboard.writeText(patient.id)

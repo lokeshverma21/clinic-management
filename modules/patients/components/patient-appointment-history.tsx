@@ -35,7 +35,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
-import { format, isAfter, isToday, isTomorrow, isYesterday } from "date-fns"
+import { isAfter } from "date-fns"
+import { istDateKey, todayIstKey, startOfIstDay, formatIstDate, formatIstTime } from "@/lib/time"
 import type { AppointmentWithDetails } from "@/modules/appointments/appointment.types"
 import type { InvoiceWithDetails } from "@/modules/billing/billing.types"
 
@@ -127,9 +128,13 @@ export function PatientAppointmentHistory({
   }
 
   const formatRelativeDay = (date: Date) => {
-    if (isToday(date)) return "Today"
-    if (isTomorrow(date)) return "Tomorrow"
-    if (isYesterday(date)) return "Yesterday"
+    const dKey = istDateKey(date)
+    const today = todayIstKey()
+    if (dKey === today) return "Today"
+    const tomorrow = istDateKey(new Date(startOfIstDay(today).getTime() + 24 * 3600 * 1000))
+    if (dKey === tomorrow) return "Tomorrow"
+    const yesterday = istDateKey(new Date(startOfIstDay(today).getTime() - 24 * 3600 * 1000))
+    if (dKey === yesterday) return "Yesterday"
     return null
   }
 
@@ -257,7 +262,7 @@ export function PatientAppointmentHistory({
                       <TableCell className="align-middle py-3 pl-4">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1.5 font-medium text-xs text-foreground tabular-nums">
-                            <span>{format(startDate, "d MMM yyyy")}</span>
+                            <span>{formatIstDate(startDate, "d MMM yyyy")}</span>
                             {relativeDay && (
                               <Badge 
                                 variant={relativeDay === "Today" ? "default" : "secondary"} 
@@ -270,7 +275,7 @@ export function PatientAppointmentHistory({
                           <div className="text-[11px] text-muted-foreground flex items-center gap-1 tabular-nums">
                             <Clock className="size-3" />
                             <span>
-                              {format(startDate, "h:mm a")} - {format(endDate, "h:mm a")}
+                              {formatIstTime(startDate)} - {formatIstTime(endDate)}
                             </span>
                           </div>
                         </div>

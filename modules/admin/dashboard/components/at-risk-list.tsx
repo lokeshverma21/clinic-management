@@ -1,7 +1,7 @@
 // modules/admin/dashboard/components/at-risk-list.tsx
 import * as React from 'react';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatIstDate } from '@/lib/time';
 import { AlertTriangle, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +47,7 @@ export function AtRiskList({ clinics }: AtRiskListProps) {
               const isPastDue = c.status === 'past_due';
               const subtitle = isPastDue
                 ? c.graceEndsAt
-                  ? `Billing grace ends ${format(new Date(c.graceEndsAt), 'MMM d, yyyy')}`
+                  ? `Billing grace ends ${formatIstDate(c.graceEndsAt, 'MMM d, yyyy')}`
                   : 'Payment past due'
                 : c.suspensionSource === 'billing'
                   ? 'Suspended by billing'

@@ -51,15 +51,15 @@ export async function countSignupsByMonth(
 
   const rows = await db
     .select({
-      month: sql<string>`to_char((${clinics.createdAt} at time zone 'UTC'), 'YYYY-MM')`,
+      month: sql<string>`to_char((${clinics.createdAt} at time zone 'Asia/Kolkata'), 'YYYY-MM')`,
       count: sql<number>`count(*)::int`,
     })
     .from(clinics)
     .where(
-      sql`${clinics.createdAt} >= (now() at time zone 'UTC') - (${safeMonths} || ' months')::interval`,
+      sql`${clinics.createdAt} >= (now() at time zone 'Asia/Kolkata') - (${safeMonths} || ' months')::interval`,
     )
-    .groupBy(sql`to_char((${clinics.createdAt} at time zone 'UTC'), 'YYYY-MM')`)
-    .orderBy(sql`to_char((${clinics.createdAt} at time zone 'UTC'), 'YYYY-MM')`);
+    .groupBy(sql`to_char((${clinics.createdAt} at time zone 'Asia/Kolkata'), 'YYYY-MM')`)
+    .orderBy(sql`to_char((${clinics.createdAt} at time zone 'Asia/Kolkata'), 'YYYY-MM')`);
 
   return rows.map((r) => ({
     month: r.month,

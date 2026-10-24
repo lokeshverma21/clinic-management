@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { formatIstDateTime } from "@/lib/time";
 import {
   ChevronLeft,
   ChevronRight,
@@ -149,13 +149,13 @@ export function NotificationsTable({
 
                 {/* Scheduled For */}
                 <TableCell className="py-3 text-xs text-muted-foreground font-mono">
-                  {format(new Date(row.scheduledFor), "yyyy-MM-dd HH:mm")}
+                  {formatIstDateTime(row.scheduledFor, "minute")}
                 </TableCell>
 
                 {/* Sent At */}
                 <TableCell className="py-3 text-xs text-muted-foreground font-mono">
                   {row.sentAt ? (
-                    format(new Date(row.sentAt), "yyyy-MM-dd HH:mm")
+                    formatIstDateTime(row.sentAt, "minute")
                   ) : (
                     <span className="text-muted-foreground/40">—</span>
                   )}

@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
+import { formatIstDate } from '@/lib/time';
 import {
   Table,
   TableBody,
@@ -84,7 +84,7 @@ export function PlatformUsersTable({
 
                   {/* Added Date */}
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {format(new Date(user.createdAt), 'MMM d, yyyy')}
+                    {formatIstDate(user.createdAt, 'MMM d, yyyy')}
                   </TableCell>
 
                   {/* Row Actions Menu */}

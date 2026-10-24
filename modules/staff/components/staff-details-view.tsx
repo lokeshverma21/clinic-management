@@ -38,7 +38,7 @@ import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-stat
 import { StaffEditDialog } from "./staff-edit-dialog"
 import { DeactivateStaffDialog } from "./staff-deactivate-dialog"
 import { parse24To12 } from "@/components/dashboard/dashboard-time-picker"
-import { format } from "date-fns"
+import { formatIstDate, formatIstTime } from "@/lib/time"
 import type { StaffListItem } from "../staff.types"
 import type { AppointmentWithDetails } from "@/modules/appointments/appointment.types"
 
@@ -98,7 +98,7 @@ export function StaffDetailsView({
   const workingHours = staff.staffProfile?.workingHours
 
   const joinedText = staff.joinedAt
-    ? format(new Date(staff.joinedAt), "d MMM yyyy")
+    ? formatIstDate(staff.joinedAt, "d MMM yyyy")
     : "Invitation pending"
 
   // Derive metrics for doctor appointment history
@@ -115,7 +115,7 @@ export function StaffDetailsView({
     .filter((a) => a.status === "completed" || new Date(a.endTime) <= now)
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
   const lastVisitDate = pastAppointments[0]
-    ? format(new Date(pastAppointments[0].startTime), "d MMM yyyy")
+    ? formatIstDate(pastAppointments[0].startTime, "d MMM yyyy")
     : "None yet"
 
   // Recent appointments sorted desc
@@ -379,10 +379,10 @@ export function StaffDetailsView({
                                 </div>
                               </TableCell>
                               <TableCell className="text-xs text-muted-foreground tabular-nums py-3">
-                                {format(startDate, "EEE d MMM yyyy")}
+                                {formatIstDate(startDate, "EEE d MMM yyyy")}
                               </TableCell>
                               <TableCell className="text-xs text-foreground font-medium tabular-nums py-3">
-                                {format(startDate, "h:mm a")} – {format(endDate, "h:mm a")}
+                                {formatIstTime(startDate)} – {formatIstTime(endDate)}
                               </TableCell>
                               <TableCell className="py-3">
                                 <StatusBadge type="appointment" status={apt.status} />

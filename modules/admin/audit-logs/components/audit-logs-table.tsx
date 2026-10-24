@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { formatIstDateTime } from "@/lib/time"
 import {
   ChevronLeft,
   ChevronRight,
@@ -92,7 +92,7 @@ export function AuditLogsTable({
           </TableHeader>
           <TableBody>
             {logs.map((log) => {
-              const formattedDate = format(new Date(log.createdAt), "yyyy-MM-dd HH:mm:ss");
+              const formattedDate = formatIstDateTime(log.createdAt, "audit");
               const hasMetadata =
                 log.metadata !== null &&
                 typeof log.metadata === "object" &&

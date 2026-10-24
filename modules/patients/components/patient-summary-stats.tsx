@@ -11,7 +11,8 @@ import {
   UserCheck
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { format, isAfter, isBefore } from "date-fns"
+import { isAfter, isBefore } from "date-fns"
+import { formatIstDate, formatIstTime } from "@/lib/time"
 import type { AppointmentWithDetails } from "@/modules/appointments/appointment.types"
 
 interface PatientSummaryStatsProps {
@@ -119,11 +120,11 @@ export function PatientSummaryStats({ appointments }: PatientSummaryStatsProps) 
           {nextAppointment ? (
             <div className="space-y-1">
               <div className="text-sm font-semibold text-foreground tracking-tight tabular-nums">
-                {format(new Date(nextAppointment.startTime), "EEE, d MMM yyyy")}
+                {formatIstDate(nextAppointment.startTime, "EEE, d MMM yyyy")}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
                 <Clock className="size-3 text-muted-foreground shrink-0" />
-                <span>{format(new Date(nextAppointment.startTime), "h:mm a")}</span>
+                <span>{formatIstTime(nextAppointment.startTime)}</span>
                 <span>•</span>
                 <span className="truncate">Dr. {nextAppointment.doctor.fullName}</span>
               </div>
@@ -150,7 +151,7 @@ export function PatientSummaryStats({ appointments }: PatientSummaryStatsProps) 
           {lastAppointment ? (
             <div className="space-y-1">
               <div className="text-sm font-semibold text-foreground tracking-tight tabular-nums">
-                {format(new Date(lastAppointment.startTime), "EEE, d MMM yyyy")}
+                {formatIstDate(lastAppointment.startTime, "EEE, d MMM yyyy")}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <UserCheck className="size-3 text-muted-foreground shrink-0" />

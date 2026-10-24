@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { getIstParts } from "@/lib/time/ist"
 import { cn } from "@/lib/utils"
 import type { StaffListItem } from "@/modules/staff"
 
@@ -158,7 +158,7 @@ export function BillingToolbar({
                 aria-label="Start date filter"
               >
                 <CalendarIcon className="mr-1.5 size-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">{dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Start date"}</span>
+                <span className="truncate">{dateFrom ? (() => { const p = getIstParts(dateFrom); return `${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}/${p.year}`; })() : "Start date"}</span>
               </Button>
             }
           />
@@ -185,7 +185,7 @@ export function BillingToolbar({
                 aria-label="End date filter"
               >
                 <CalendarIcon className="mr-1.5 size-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">{dateTo ? format(dateTo, "dd/MM/yyyy") : "End date"}</span>
+                <span className="truncate">{dateTo ? (() => { const p = getIstParts(dateTo); return `${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}/${p.year}`; })() : "End date"}</span>
               </Button>
             }
           />

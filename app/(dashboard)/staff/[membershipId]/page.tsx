@@ -9,7 +9,8 @@ import { listStaff } from "@/modules/staff"
 import { listAppointments } from "@/modules/appointments"
 import { StaffDetailsView } from "@/modules/staff/components/staff-details-view"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
-import { format, subMonths, addMonths } from "date-fns"
+import { subMonths, addMonths } from "date-fns"
+import { istDateKey } from "@/lib/time"
 
 interface StaffDetailsPageProps {
   params: Promise<{ membershipId: string }>
@@ -100,8 +101,8 @@ export default async function StaffDetailsPage({ params }: StaffDetailsPageProps
     historyNote = "This member is currently in invited status. Appointments will appear after registration."
   } else {
     try {
-      const from = format(subMonths(new Date(), 12), "yyyy-MM-dd")
-      const to = format(addMonths(new Date(), 6), "yyyy-MM-dd")
+      const from = istDateKey(subMonths(new Date(), 12))
+      const to = istDateKey(addMonths(new Date(), 6))
       const res = await listAppointments(ctx, {
         from,
         to,

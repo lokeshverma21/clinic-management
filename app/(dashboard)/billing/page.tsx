@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { istDateKey } from "@/lib/time/ist"
 import { BillingHeader } from "@/modules/billing/components/billing-header"
 import { BillingStatsCards } from "@/modules/billing/components/billing-stats-cards"
 import { BillingToolbar } from "@/modules/billing/components/billing-toolbar"
@@ -70,8 +70,8 @@ export default function BillingPage() {
       if (doctorId !== "all") params.set("doctorMembershipId", doctorId)
       if (status !== "all") params.set("status", status)
       if (paymentMethod !== "all") params.set("paymentMethod", paymentMethod)
-      if (dateFrom) params.set("from", format(dateFrom, "yyyy-MM-dd"))
-      if (dateTo) params.set("to", format(dateTo, "yyyy-MM-dd"))
+      if (dateFrom) params.set("from", istDateKey(dateFrom))
+      if (dateTo) params.set("to", istDateKey(dateTo))
 
       const res = await fetch(`/api/billing?${params.toString()}`)
       const json = await res.json()

@@ -13,9 +13,7 @@ export function buildWhatsAppConfirmationMessage(
   ctx: AppointmentWhatsAppContext,
 ): string {
   const clinicLabel = ctx.clinicName ?? 'clinic';
-  const when = ctx.clinicTimezone
-    ? formatAppointmentDateTime(ctx.startTime, ctx.clinicTimezone)
-    : ctx.startTime.toLocaleString();
+  const when = formatAppointmentDateTime(ctx.startTime);
 
   return [
     `Hi ${ctx.patientName}`,

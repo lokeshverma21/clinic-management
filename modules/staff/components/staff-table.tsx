@@ -33,7 +33,7 @@ import { type StaffListItem } from "../staff.types"
 import { StaffAvatar } from "./staff-avatar"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 interface StaffTableProps {
@@ -203,7 +203,7 @@ export function StaffTable({
                     </TableCell>
 
                     <TableCell className="hidden xl:table-cell py-3 text-xs text-muted-foreground tabular-nums">
-                      {member.joinedAt ? format(new Date(member.joinedAt), "d MMM yyyy") : "Pending"}
+                      {member.joinedAt ? formatIstDate(member.joinedAt, "d MMM yyyy") : "Pending"}
                     </TableCell>
 
                     <TableCell className="pr-5 text-right py-3" onClick={(e) => e.stopPropagation()}>

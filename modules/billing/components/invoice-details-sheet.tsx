@@ -4,9 +4,7 @@
 import * as React from "react"
 import {
   User,
-  Phone,
   Calendar,
-  FileText,
   Pencil,
   Trash2,
   Copy,
@@ -41,7 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time/ist"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import type { InvoiceWithDetails } from "../billing.types"
@@ -215,13 +213,13 @@ export function InvoiceDetailsSheet({
                     )}
                     <DashboardDetailRow
                       label="Issued date"
-                      value={format(new Date(invoice.issuedAt), "EEE d MMM yyyy")}
+                      value={formatIstDate(invoice.issuedAt, "EEE d MMM yyyy")}
                       icon={Calendar}
                     />
                     {invoice.dueAt && (
                       <DashboardDetailRow
                         label="Payment due"
-                        value={format(new Date(invoice.dueAt), "EEE d MMM yyyy")}
+                        value={formatIstDate(invoice.dueAt, "EEE d MMM yyyy")}
                         icon={Calendar}
                       />
                     )}

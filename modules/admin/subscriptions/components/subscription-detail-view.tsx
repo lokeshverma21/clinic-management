@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import {
   CreditCard,
   ChevronLeft,
@@ -190,7 +190,7 @@ export function SubscriptionDetailView({ clinicId }: SubscriptionDetailViewProps
                 <span className="text-muted-foreground block">Current Period Start</span>
                 <div className="flex items-center gap-1.5 font-mono text-foreground">
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>{format(new Date(detail.currentPeriodStart), "MMM d, yyyy")}</span>
+                  <span>{formatIstDate(detail.currentPeriodStart, "MMM d, yyyy")}</span>
                 </div>
               </div>
 
@@ -198,7 +198,7 @@ export function SubscriptionDetailView({ clinicId }: SubscriptionDetailViewProps
                 <span className="text-muted-foreground block">Current Period End</span>
                 <div className="flex items-center gap-1.5 font-mono text-foreground">
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>{format(new Date(detail.currentPeriodEnd), "MMM d, yyyy")}</span>
+                  <span>{formatIstDate(detail.currentPeriodEnd, "MMM d, yyyy")}</span>
                 </div>
               </div>
 
@@ -206,7 +206,7 @@ export function SubscriptionDetailView({ clinicId }: SubscriptionDetailViewProps
                 <div className="space-y-1">
                   <span className="text-muted-foreground block">Paused At</span>
                   <span className="font-mono text-amber-600 dark:text-amber-400">
-                    {format(new Date(detail.pausedAt), "MMM d, yyyy")}
+                    {formatIstDate(detail.pausedAt, "MMM d, yyyy")}
                   </span>
                 </div>
               )}
@@ -215,7 +215,7 @@ export function SubscriptionDetailView({ clinicId }: SubscriptionDetailViewProps
                 <div className="space-y-1">
                   <span className="text-muted-foreground block">Cancelled At</span>
                   <span className="font-mono text-destructive">
-                    {format(new Date(detail.cancelledAt), "MMM d, yyyy")}
+                    {formatIstDate(detail.cancelledAt, "MMM d, yyyy")}
                   </span>
                 </div>
               )}

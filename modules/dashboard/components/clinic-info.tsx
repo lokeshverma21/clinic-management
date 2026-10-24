@@ -66,14 +66,11 @@ function SubscriptionStatusBadge({ status }: { status: string | null }) {
   }
 }
 
+import { formatIstDate } from '@/lib/time/ist';
+
 function formatPeriodEnd(iso: string | null): string | null {
   if (!iso) return null;
-  const date = new Date(iso);
-  return `Renews ${date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })}`;
+  return `Renews ${formatIstDate(iso, 'd MMM yyyy')}`;
 }
 
 export function ClinicInfo({ clinic }: ClinicInfoProps) {

@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time/ist"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
 import type { InvoiceWithDetails } from "../billing.types"
@@ -129,7 +129,7 @@ export function BillingTable({
                       {invoice.doctor?.fullName ?? "—"}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-xs text-muted-foreground tabular-nums">
-                      {format(new Date(invoice.issuedAt), "d MMM yyyy")}
+                      {formatIstDate(invoice.issuedAt, "d MMM yyyy")}
                     </TableCell>
                     <TableCell>
                       <StatusBadge type="invoice" status={invoice.status} />

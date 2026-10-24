@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import {
   ChevronLeft,
   ChevronRight,
@@ -70,11 +70,11 @@ export function ClinicsTable({
           <TableBody>
             {clinics.map((clinic) => {
               const formattedCreated = clinic.createdAt
-                ? format(new Date(clinic.createdAt), "MMM d, yyyy")
+                ? formatIstDate(clinic.createdAt, "MMM d, yyyy")
                 : "—";
 
               const formattedTrial = clinic.trialEndsAt
-                ? format(new Date(clinic.trialEndsAt), "MMM d, yyyy")
+                ? formatIstDate(clinic.trialEndsAt, "MMM d, yyyy")
                 : "—";
 
               return (

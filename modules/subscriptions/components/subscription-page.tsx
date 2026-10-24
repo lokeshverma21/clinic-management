@@ -43,6 +43,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge";
+import { formatIstDate, formatIstDateTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type {
   Subscription,
@@ -250,7 +251,7 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                 Your plan is set to cancel on{" "}
                 <b className="text-foreground underline">
                   {subscription?.currentPeriodEnd
-                    ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", { dateStyle: 'long' })
+                    ? formatIstDate(subscription.currentPeriodEnd, "MMMM d, yyyy")
                     : "end of period"}
                 </b>
                 .
@@ -285,10 +286,10 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground tabular-nums">
-                  {subscription.status === "trialing" && `Trial ends ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}`}
-                  {subscription.status === "active" && !isCancelledScheduled && `Renews on ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}`}
-                  {subscription.status === "active" && isCancelledScheduled && `Access until ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN")}`}
-                  {subscription.status === "paused" && `Paused since ${subscription.pausedAt ? new Date(subscription.pausedAt).toLocaleDateString("en-IN") : "recently"}`}
+                  {subscription.status === "trialing" && `Trial ends ${formatIstDate(subscription.currentPeriodEnd, "d MMM yyyy")}`}
+                  {subscription.status === "active" && !isCancelledScheduled && `Renews on ${formatIstDate(subscription.currentPeriodEnd, "d MMM yyyy")}`}
+                  {subscription.status === "active" && isCancelledScheduled && `Access until ${formatIstDate(subscription.currentPeriodEnd, "d MMM yyyy")}`}
+                  {subscription.status === "paused" && `Paused since ${subscription.pausedAt ? formatIstDate(subscription.pausedAt, "d MMM yyyy") : "recently"}`}
                 </p>
               </div>
 
@@ -433,10 +434,7 @@ export function SubscriptionPage({ callback }: { callback?: boolean }) {
                           <StatusBadge type="subscription" status={event.status} />
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground text-xs tabular-nums">
-                          {new Date(event.processedAt).toLocaleString("en-IN", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
+                          {formatIstDateTime(event.processedAt)}
                         </TableCell>
                       </TableRow>
                     ))

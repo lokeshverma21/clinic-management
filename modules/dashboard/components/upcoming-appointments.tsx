@@ -58,29 +58,18 @@ function StatusBadge({ status }: { status: AppointmentStatus }) {
   }
 }
 
+import { istTimeOfDay, istDateKey, todayIstKey, getIstParts } from '@/lib/time/ist';
+
 /**
- * Formats a UTC ISO datetime to a short human-readable label.
+ * Formats a UTC ISO datetime to a short human-readable label in IST.
  */
 function formatAppointmentLabel(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
-
-  const time = date.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  const isToday = date.toDateString() === now.toDateString();
+  const time = istTimeOfDay(iso);
+  const isToday = istDateKey(iso) === todayIstKey();
   if (isToday) return `Today, ${time}`;
 
-  const dateLabel = date.toLocaleDateString('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
-
-  return `${dateLabel}, ${time}`;
+  const parts = getIstParts(iso);
+  return `${parts.shortWeekday}, ${parts.day} ${parts.shortMonth}, ${time}`;
 }
 
 export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps) {

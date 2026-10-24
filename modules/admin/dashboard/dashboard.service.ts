@@ -12,10 +12,10 @@ import type {
   AdminDashboardAtRiskClinic,
   ClinicStatus,
 } from './dashboard.types';
-import { format } from 'date-fns';
+import { getIstParts } from '@/lib/time';
 
 /**
- * Generates an array of the last `count` months in UTC (format 'YYYY-MM'),
+ * Generates an array of the last `count` months in IST (format 'YYYY-MM'),
  * zero-filled with any signup counts returned from the repository.
  */
 function buildZeroFilledSignups(
@@ -28,15 +28,19 @@ function buildZeroFilledSignups(
   }
 
   const result: AdminDashboardSignupMonth[] = [];
-  const now = new Date();
+  const nowParts = getIstParts(Date.now());
 
-  // Generate sequence from (monthCount - 1) months ago up to current month (UTC)
+  // Generate sequence from (monthCount - 1) months ago up to current month (IST)
   for (let i = monthCount - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-    const year = d.getUTCFullYear();
-    const monthNumber = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const monthKey = `${year}-${monthNumber}`;
-    const label = format(d, 'MMM yyyy');
+    let year = nowParts.year;
+    let month = nowParts.month - i;
+    while (month < 1) {
+      month += 12;
+      year -= 1;
+    }
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+    const dateObj = new Date(year, month - 1, 1);
+    const label = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(dateObj);
 
     result.push({
       month: monthKey,

@@ -26,7 +26,7 @@ import { StaffAvatar } from "./staff-avatar"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import { parse24To12 } from "@/components/dashboard/dashboard-time-picker"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import { cn } from "@/lib/utils"
 import type { StaffListItem } from "../staff.types"
 
@@ -74,7 +74,7 @@ export function StaffViewDialog({
   const workingHours = staff.staffProfile?.workingHours
 
   const joinedText = staff.joinedAt
-    ? format(new Date(staff.joinedAt), "d MMM yyyy")
+    ? formatIstDate(staff.joinedAt, "d MMM yyyy")
     : "Invitation pending"
 
   return (

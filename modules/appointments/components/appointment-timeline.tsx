@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { format } from "date-fns"
+import { formatIstTime } from "@/lib/time/ist"
 import type { AppointmentWithDetails } from "../appointment.types"
 
 interface AppointmentTimelineProps {
@@ -56,7 +56,7 @@ export function AppointmentTimeline({
   const groups: { timeSlot: string; appointments: AppointmentWithDetails[] }[] = []
 
   sorted.forEach((apt) => {
-    const timeSlot = format(new Date(apt.startTime), "h:mm a")
+    const timeSlot = formatIstTime(apt.startTime)
     const existing = groups.find((g) => g.timeSlot === timeSlot)
     if (existing) {
       existing.appointments.push(apt)

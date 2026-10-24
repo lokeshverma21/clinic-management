@@ -7,10 +7,10 @@ import type { ListInvoicesFilters, InvoiceWithDetails, InvoiceStats } from './bi
 
 /** The Drizzle transaction type — avoids `any` on the `tx` parameter. */
 type DbClient = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
-type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+import { startOfIstDay, endOfIstDay, getIstParts, combineIstDateAndTime } from '@/lib/time/ist';
 
 export async function generateInvoiceNumber(clinicId: string, tx: DbClient = db): Promise<string> {
-  const currentYear = new Date().getFullYear();
+  const currentYear = getIstParts(Date.now()).year;
   const prefix = `INV-${currentYear}-`;
 
   const [lastInvoice] = await tx
@@ -49,12 +49,10 @@ export async function listInvoices(
     conditions.push(eq(invoices.paymentMethod, filters.paymentMethod));
   }
   if (filters.from) {
-    const fromDate = new Date(`${filters.from}T00:00:00.000Z`);
-    conditions.push(gte(invoices.issuedAt, fromDate));
+    conditions.push(gte(invoices.issuedAt, startOfIstDay(filters.from)));
   }
   if (filters.to) {
-    const toDate = new Date(`${filters.to}T23:59:59.999Z`);
-    conditions.push(lte(invoices.issuedAt, toDate));
+    conditions.push(lte(invoices.issuedAt, endOfIstDay(filters.to)));
   }
 
   // Search across invoice number, patient name, patient phone, or doctor name
@@ -322,8 +320,9 @@ export async function softDeleteInvoice(clinicId: string, invoiceId: string): Pr
 }
 
 export async function getBillingSummaryStats(clinicId: string): Promise<InvoiceStats> {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const parts = getIstParts(Date.now());
+  const monthStr = String(parts.month).padStart(2, '0');
+  const startOfMonth = combineIstDateAndTime(`${parts.year}-${monthStr}-01`, '00:00');
 
   // 1. Total revenue (sum of amount_paid of all non-deleted invoices)
   const [revRow] = await db

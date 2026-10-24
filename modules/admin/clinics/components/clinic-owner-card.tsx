@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import { User, Mail, Phone, Calendar, ShieldCheck } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -61,7 +61,7 @@ export function ClinicOwnerCard({ owners }: ClinicOwnerCardProps) {
                   {owner.joinedAt && (
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span>Joined {format(new Date(owner.joinedAt), "MMM d, yyyy")}</span>
+                      <span>Joined {formatIstDate(owner.joinedAt, "MMM d, yyyy")}</span>
                     </div>
                   )}
                 </div>

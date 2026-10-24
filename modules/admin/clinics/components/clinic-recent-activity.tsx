@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { getIstParts } from "@/lib/time"
 import { History, Clock, User, Code } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -77,7 +77,8 @@ export function ClinicRecentActivity({ clinicId }: ClinicRecentActivityProps) {
         ) : (
           <div className="divide-y divide-border/40">
             {logs.map((log) => {
-              const formattedDate = format(new Date(log.createdAt), "MMM d, yyyy HH:mm");
+              const p = getIstParts(log.createdAt);
+              const formattedDate = `${p.shortMonth} ${p.day}, ${p.year} ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
               const hasMetadata =
                 log.metadata !== null &&
                 typeof log.metadata === "object" &&

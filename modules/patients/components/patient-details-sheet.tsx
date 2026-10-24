@@ -25,7 +25,7 @@ import { Separator } from "@/components/ui/separator"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import { PatientAvatar } from "./patient-avatar"
-import { format } from "date-fns"
+import { ageFromDateOnly, formatDateOnly, formatIstDate, formatIstDateTime } from "@/lib/time"
 import type { Patient } from "../patients.types"
 
 interface PatientDetailsSheetProps {
@@ -34,19 +34,6 @@ interface PatientDetailsSheetProps {
   patientId: string | null
   onEdit: () => void
   onSuccess?: () => void
-}
-
-function calculateAge(dobStr?: string | null): number | null {
-  if (!dobStr) return null
-  const dob = new Date(dobStr)
-  if (isNaN(dob.getTime())) return null
-  const today = new Date()
-  let age = today.getFullYear() - dob.getFullYear()
-  const m = today.getMonth() - dob.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-    age--
-  }
-  return age >= 0 ? age : null
 }
 
 function formatGender(gender?: string | null): string {
@@ -135,10 +122,10 @@ export function PatientDetailsSheet({
     )
   }
 
-  const creationDate = patient ? format(new Date(patient.createdAt), "d MMM yyyy") : ""
-  const age = calculateAge(patient?.dateOfBirth)
+  const creationDate = patient ? formatIstDate(patient.createdAt, "d MMM yyyy") : ""
+  const age = ageFromDateOnly(patient?.dateOfBirth)
   const birthday = patient?.dateOfBirth 
-    ? `${format(new Date(patient.dateOfBirth), "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}` 
+    ? `${formatDateOnly(patient.dateOfBirth, "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}` 
     : "Not specified"
 
   return (
@@ -216,12 +203,12 @@ export function PatientDetailsSheet({
                 <div className="space-y-1 rounded-lg border border-border/60 p-3.5 bg-card">
                   <DashboardDetailRow
                     label="Registered"
-                    value={format(new Date(patient.createdAt), "d MMM yyyy, h:mm a")}
+                    value={formatIstDateTime(patient.createdAt)}
                     tabular
                   />
                   <DashboardDetailRow
                     label="Last updated"
-                    value={format(new Date(patient.updatedAt), "d MMM yyyy, h:mm a")}
+                    value={formatIstDateTime(patient.updatedAt)}
                     tabular
                   />
                 </div>

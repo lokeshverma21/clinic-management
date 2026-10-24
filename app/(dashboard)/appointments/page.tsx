@@ -12,7 +12,7 @@ import { AppointmentDetailsSheet } from "@/modules/appointments/components/appoi
 import { AppointmentLoading } from "@/modules/appointments/components/appointment-loading"
 import { AppointmentError } from "@/modules/appointments/components/appointment-error"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { format } from "date-fns"
+import { istDateKey, getIstParts } from "@/lib/time/ist"
 import type { AppointmentWithDetails } from "@/modules/appointments/appointment.types"
 
 // ---------------------------------------------------------------------------
@@ -40,7 +40,10 @@ export default function AppointmentsPage() {
   // search is applied client-side (see filteredAppointments below).
   const [searchQuery, setSearchQuery] = React.useState("")
   const [doctorFilter, setDoctorFilter] = React.useState("all")
-  const [date, setDate] = React.useState<Date | undefined>(new Date())
+  const [date, setDate] = React.useState<Date | undefined>(() => {
+    const p = getIstParts(Date.now())
+    return new Date(p.year, p.month - 1, p.day)
+  })
   const [statusFilter, setStatusFilter] = React.useState("all")
 
   // Incrementing this token causes the effect to re-run without changing
@@ -70,7 +73,7 @@ export default function AppointmentsPage() {
 
     let cancelled = false
 
-    const dateStr = format(date, "yyyy-MM-dd")
+    const dateStr = istDateKey(date)
     let url = `/api/appointments?from=${dateStr}&to=${dateStr}`
     if (doctorFilter !== "all") url += `&doctorId=${doctorFilter}`
     if (statusFilter !== "all") url += `&status=${statusFilter}`

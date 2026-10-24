@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardDetailRow } from "@/components/dashboard/dashboard-detail-row"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { format } from "date-fns"
+import { formatIstDate, formatIstTime, formatIstDateTime } from "@/lib/time/ist"
 import type { AppointmentWithDetails } from "../appointment.types"
 
 interface AppointmentDetailsSheetProps {
@@ -100,9 +100,7 @@ export function AppointmentDetailsSheet({
     }
   }
 
-  const startDate = new Date(appointment.startTime)
-  const endDate = new Date(appointment.endTime)
-  const readableSchedule = `${format(startDate, "EEE d MMM yyyy")}, ${format(startDate, "h:mm a")} to ${format(endDate, "h:mm a")}`
+  const readableSchedule = `${formatIstDate(appointment.startTime, "EEE d MMM yyyy")}, ${formatIstTime(appointment.startTime)} to ${formatIstTime(appointment.endTime)}`
 
   const isPastOrClosed = appointment.status === "completed" || appointment.status === "canceled"
 
@@ -249,12 +247,12 @@ export function AppointmentDetailsSheet({
             <div className="space-y-1 rounded-lg border border-border/60 p-3.5 bg-card">
               <DashboardDetailRow
                 label="Created at"
-                value={format(new Date(appointment.createdAt), "d MMM yyyy, h:mm a")}
+                value={formatIstDateTime(appointment.createdAt)}
                 tabular
               />
               <DashboardDetailRow
                 label="Last updated"
-                value={format(new Date(appointment.updatedAt), "d MMM yyyy, h:mm a")}
+                value={formatIstDateTime(appointment.updatedAt)}
                 tabular
               />
             </div>

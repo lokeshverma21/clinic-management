@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { format } from "date-fns"
+import { getIstParts } from "@/lib/time"
 import {
   ChevronLeft,
   ChevronRight,
@@ -129,7 +129,12 @@ export function WebhookEventsTable({
                 <TableCell className="py-3 text-right font-mono text-xs text-muted-foreground">
                   <div className="flex items-center justify-end gap-1.5">
                     <Calendar className="h-3 w-3 text-muted-foreground/60" />
-                    <span>{format(new Date(ev.processedAt), "MMM d, yyyy HH:mm:ss")}</span>
+                    <span>
+                      {(() => {
+                        const p = getIstParts(ev.processedAt);
+                        return `${p.shortMonth} ${p.day}, ${p.year} ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}:${String(p.second).padStart(2, "0")}`;
+                      })()}
+                    </span>
                   </div>
                 </TableCell>
               </TableRow>

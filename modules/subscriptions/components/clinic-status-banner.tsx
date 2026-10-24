@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { addDays, format } from 'date-fns';
+import { addDays } from 'date-fns';
 import { AlertTriangle, AlertCircle, ArrowRight } from 'lucide-react';
 import { PAST_DUE_GRACE_DAYS, READ_ONLY_CLINIC_STATUSES } from '@/lib/policy/subscription-policy';
+import { formatIstDate } from '@/lib/time';
 import type { ClinicProfile } from '@/modules/clinic-profile/clinic-profile.types';
 
 interface ClinicStatusBannerProps {
@@ -13,7 +14,7 @@ export function ClinicStatusBanner({ clinic }: ClinicStatusBannerProps) {
     const graceDate = clinic.pastDueSince
       ? addDays(new Date(clinic.pastDueSince), PAST_DUE_GRACE_DAYS)
       : addDays(new Date(), PAST_DUE_GRACE_DAYS);
-    const formattedDate = format(graceDate, 'MMMM d, yyyy');
+    const formattedDate = formatIstDate(graceDate, 'MMMM d, yyyy');
 
     return (
       <div className="flex items-center justify-between gap-4 border-b border-warning/30 bg-warning/10 px-4 py-2.5 text-xs sm:text-sm text-warning">

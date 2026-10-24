@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import {
   ChevronLeft,
   ChevronRight,
@@ -114,13 +114,13 @@ export function SubscriptionsTable({
                 <TableCell className="py-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5 font-mono">
                     <Calendar className="h-3.5 w-3.5 text-muted-foreground/70" />
-                    <span>{format(new Date(sub.currentPeriodEnd), "MMM d, yyyy")}</span>
+                    <span>{formatIstDate(sub.currentPeriodEnd, "MMM d, yyyy")}</span>
                   </div>
                 </TableCell>
 
                 {/* Created Date */}
                 <TableCell className="py-3 text-xs text-muted-foreground font-mono">
-                  {format(new Date(sub.createdAt), "MMM d, yyyy")}
+                  {formatIstDate(sub.createdAt, "MMM d, yyyy")}
                 </TableCell>
 
                 {/* Actions */}

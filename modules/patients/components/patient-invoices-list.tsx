@@ -20,7 +20,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/dashboard/dashboard-status-badge"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+import { formatIstDate } from "@/lib/time"
 import type { InvoiceWithDetails } from "@/modules/billing/billing.types"
 
 interface PatientInvoicesListProps {
@@ -121,7 +121,7 @@ export function PatientInvoicesList({ invoices }: PatientInvoicesListProps) {
                       {inv.invoiceNumber}
                     </TableCell>
                     <TableCell className="py-3 text-xs text-muted-foreground tabular-nums">
-                      {format(new Date(inv.issuedAt), "d MMM yyyy")}
+                      {formatIstDate(inv.issuedAt, "d MMM yyyy")}
                     </TableCell>
                     <TableCell className="py-3 text-xs text-foreground">
                       {inv.doctor ? `Dr. ${inv.doctor.fullName}` : "Clinic"}

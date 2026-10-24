@@ -34,7 +34,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { formatDateOnly } from "@/lib/time"
 import { cn } from "@/lib/utils"
 import type { Patient } from "../patients.types"
 
@@ -44,6 +44,24 @@ interface PatientDialogProps {
   mode: "add" | "edit"
   patientId?: string | null
   onSuccess?: (patient: Patient) => void
+}
+
+function parseDobToDate(dobStr?: string | null): Date | undefined {
+  if (!dobStr) return undefined
+  const clean = dobStr.slice(0, 10)
+  const parts = clean.split("-")
+  if (parts.length !== 3) return undefined
+  const [y, m, d] = parts.map((n) => parseInt(n, 10))
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined
+  return new Date(y, m - 1, d, 12, 0, 0)
+}
+
+function dateToDobString(d?: Date): string | undefined {
+  if (!d) return undefined
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
 }
 
 export function PatientDialog({ 
@@ -81,7 +99,7 @@ export function PatientDialog({
           setFullName(p.fullName)
           setPhone(p.phone)
           setEmail(p.email ?? "")
-          setDate(p.dateOfBirth ? new Date(p.dateOfBirth) : undefined)
+          setDate(parseDobToDate(p.dateOfBirth))
           setGender(p.gender ?? "undisclosed")
           setNotes(p.notes ?? "")
         } catch (err) {
@@ -147,7 +165,7 @@ export function PatientDialog({
         fullName: fullName.trim(),
         phone: cleanedPhone,
         email: email.trim() || undefined,
-        dateOfBirth: date ? format(date, "yyyy-MM-dd") : undefined,
+        dateOfBirth: dateToDobString(date),
         gender: gender === "undisclosed" ? undefined : gender,
         notes: notes.trim() || undefined,
       }
@@ -295,7 +313,7 @@ export function PatientDialog({
                           )}
                         >
                           <CalendarIcon className="mr-2 size-4 text-muted-foreground shrink-0" />
-                          {date ? format(date, "PPP") : <span>Pick date of birth</span>}
+                          {date ? formatDateOnly(dateToDobString(date), "PPP") : <span>Pick date of birth</span>}
                         </Button>
                       }
                     />

@@ -29,7 +29,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state"
 import { PatientAvatar } from "./patient-avatar"
-import { format } from "date-fns"
+import { ageFromDateOnly, formatDateOnly, formatIstDate } from "@/lib/time"
 import { type Patient } from "../patients.types"
 
 interface PatientTableProps {
@@ -41,19 +41,6 @@ interface PatientTableProps {
   onViewPatient: (patientId: string) => void
   onEditPatient: (patientId: string) => void
   onArchivePatient: (patientId: string) => void
-}
-
-function calculateAge(dobStr?: string | null): number | null {
-  if (!dobStr) return null
-  const dob = new Date(dobStr)
-  if (isNaN(dob.getTime())) return null
-  const today = new Date()
-  let age = today.getFullYear() - dob.getFullYear()
-  const m = today.getMonth() - dob.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-    age--
-  }
-  return age >= 0 ? age : null
 }
 
 function formatGender(gender?: string | null): string {
@@ -106,11 +93,11 @@ export function PatientTable({
             </TableHeader>
             <TableBody>
               {patients.map((patient) => {
-                const age = calculateAge(patient.dateOfBirth)
+                const age = ageFromDateOnly(patient.dateOfBirth)
                 const formattedDob = patient.dateOfBirth 
-                  ? `${format(new Date(patient.dateOfBirth), "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}`
+                  ? `${formatDateOnly(patient.dateOfBirth, "d MMM yyyy")}${age !== null ? ` (${age} yrs)` : ""}`
                   : "—"
-                const formattedCreated = format(new Date(patient.createdAt), "d MMM yyyy")
+                const formattedCreated = formatIstDate(patient.createdAt, "d MMM yyyy")
 
                 return (
                   <TableRow 

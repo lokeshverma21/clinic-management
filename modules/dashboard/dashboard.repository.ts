@@ -10,7 +10,6 @@ import {
   isNull,
   lte,
   ne,
-  sql,
 } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
@@ -34,24 +33,18 @@ import type {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+import { istDayRange } from '@/lib/time/ist';
+
 /**
- * Returns the inclusive UTC start (00:00:00.000) and inclusive UTC end
- * (23:59:59.999) of the current calendar day as Date objects.
+ * Returns the inclusive UTC start and inclusive UTC end of the current
+ * calendar day in Indian Standard Time (Asia/Kolkata).
  *
  * Computed once per repository call and passed explicitly into every
  * sub-query that needs it — avoids `new Date()` drift across the
- * Promise.all fan-out when a request straddles a UTC midnight boundary.
+ * Promise.all fan-out when a request straddles a midnight boundary.
  */
 function getTodayBounds(): { start: Date; end: Date } {
-  const now = new Date();
-
-  const start = new Date(now);
-  start.setUTCHours(0, 0, 0, 0);
-
-  const end = new Date(now);
-  end.setUTCHours(23, 59, 59, 999);
-
-  return { start, end };
+  return istDayRange();
 }
 
 /**
